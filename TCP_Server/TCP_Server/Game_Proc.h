@@ -1,21 +1,5 @@
 #pragma once
-#include <Windows.h>
 #include"Network.h"
-
-// 캐릭터 동작 플래그
-#define dfACTION_MOVE_LL		0
-#define dfACTION_MOVE_LU		1
-#define dfACTION_MOVE_UU		2
-#define dfACTION_MOVE_RU		3
-#define dfACTION_MOVE_RR		4
-#define dfACTION_MOVE_RD		5
-#define dfACTION_MOVE_DD		6
-#define dfACTION_MOVE_LD		7
-#define dfACTION_ATTACK1		8
-#define dfACTION_ATTACK2		9
-#define dfACTION_ATTACK3		10
-#define dfACTION_DAMAGE			11
-#define dfACTION_NONE			255
 
 
 // 공격범위.
@@ -34,46 +18,102 @@
 
 
 // 캐릭터 이동 속도
-#define dfSPEED_PLAYER_X	3
-#define dfSPEED_PLAYER_Y	2
+#define dfSPEED_PLAYER_X	6
+#define dfSPEED_PLAYER_Y	4
 
-// 화면 이동 범위.
-#define dfRANGE_MOVE_TOP	50
-#define dfRANGE_MOVE_LEFT	10
-#define dfRANGE_MOVE_RIGHT	630
-#define dfRANGE_MOVE_BOTTOM	470
 
 
 // 이동 오류체크 범위
 #define dfERROR_RANGE		50
 
-#include<map>
-using namespace std;
+#define dfSECTOR_PIXEL_WIDTH 50
+#define dfSECTOR_PIXEL_HEIGHT 50
 
-struct st_Sector_Pos
+#define dfSector_Max_X		6400 / dfSECTOR_PIXEL_WIDTH
+#define dfSector_Max_Y		6400 / dfSECTOR_PIXEL_HEIGHT
+
+#define dfFrameTick 40
+
+#define CreateRandshX 100
+#define CreateRandshY 100
+
+
+
+struct st_SECTOR_POS
 {
-	int X;
-	int Y;
+	int iX;
+	int iY;
 };
 
-struct st_Charactor
+struct st_SECTOR_AROUND
 {
-	DWORD	AccountNo;
-	st_NETWORK_SESSION * Session;
-	DWORD	dwAction;
-	BYTE	byDirection;
-
-	short	shX;
-	short	shY;
-
-	char	chHP;
-	st_Sector_Pos CurPos;
-	st_Sector_Pos OldPos;
+	int iCount;
+	st_SECTOR_POS Around[9];
 };
 
 
-extern map<DWORD, st_Charactor *> g_Charactor;
+struct st_CHARACTER
+{
+	st_SESSION *pSession;
+	DWORD dwSessionID;
+
+	DWORD dwAction;
+	DWORD dwActionTick;		//현재 액션을 취한 시간. 데드레커닝용
+	BYTE byDirection;
+	BYTE MoveDirection;
+
+	short shX;
+	short shY;
+	short shActionX;		//액션이 변경됬을때의 좌표
+	short shActionY;
+
+	st_SECTOR_POS CurSector;
+	st_SECTOR_POS OldSector;
+
+	char chHP;
+};
 
 
-//캐릭터 생성
-void	Create_Player (st_NETWORK_SESSION *pNew);
+
+extern map<DWORD, st_CHARACTER *> g_CharacterMap;
+
+
+//월드맵 케릭터 섹터
+extern list<st_CHARACTER *> g_Sector[dfSector_Max_Y][dfSector_Max_X];
+
+//캐릭터 검색
+st_CHARACTER *FindCharacter (DWORD dwSessionID);
+
+//공격 충돌 체크
+st_CHARACTER *AttackCheck (int iAttackType, DWORD dwSessionID);
+
+//새로운 사용자 생성
+BOOL	gameCreatePlayer (st_SESSION *pSession);
+
+
+void Update (void);
+
+BOOL	MoveCheck (int iX, int iY);
+
+//DeadReckoning (현재액션,액션시작 시간, 액션시작 위치, X,Y, (OUT)계산된 좌표 X, Y
+int DeadReckoningPos (DWORD dwAction, DWORD dwActionTick, short shActionX, short shActionY, int *pPosX, int *pPosY);
+
+//캐릭터의 현재 좌표 shX,shY기준 섹터 위치를 계산해서 해당 섹터에 넣음
+void Sector_AddCharacter (st_CHARACTER *pChararter);
+
+
+//캐릭터의 현재 좌표 shX,shY기준 섹터 위치를 계산해서 해당 섹터에서 삭제
+void Sector_RemoveCharacter (st_CHARACTER *pChararter);
+
+
+//현재 위치한 섹터에서 삭제 후 현재의 좌표로 섹터를 새롭게 계산해서 넣음
+bool Sector_UpdateCharacter (st_CHARACTER *pChararter);
+
+
+//특정 섹터 좌표 기준 주변 영향권 섹터 얻기
+void GetSectorAround (int iSectorX, int iSectorY, st_SECTOR_AROUND *pSectorAround);
+
+//섹터에서 섹터를 이동 하였을때 섹터 영향권에 빠진 섹터, 새로 추가된 섹터의 정보 구하는 함수
+void GetUpdateSectorAround (st_CHARACTER *pChararter, st_SECTOR_AROUND *pRemoveSector, st_SECTOR_AROUND *pAddSector);
+
+void CharacterSectorUpdatePacket (st_CHARACTER *pCharacter);

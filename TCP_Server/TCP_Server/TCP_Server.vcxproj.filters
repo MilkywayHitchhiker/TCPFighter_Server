@@ -48,18 +48,15 @@
     <ClInclude Include="Game_Proc.h">
       <Filter>소스 파일\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Create_Packet.h">
-      <Filter>소스 파일\Network</Filter>
+    <ClInclude Include="main.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Sector.h">
+    <ClInclude Include="CreatePacket.h">
       <Filter>소스 파일\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="TCP_Server.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Packet.cpp">
@@ -74,10 +71,10 @@
     <ClCompile Include="Game_Proc.cpp">
       <Filter>소스 파일\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Create_Packet.cpp">
-      <Filter>소스 파일\Network</Filter>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Sector.cpp">
+    <ClCompile Include="CreatePacket.cpp">
       <Filter>소스 파일\Network</Filter>
     </ClCompile>
   </ItemGroup>

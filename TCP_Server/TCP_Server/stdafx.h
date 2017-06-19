@@ -11,5 +11,15 @@
 #include <tchar.h>
 
 
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#include<WinSock2.h>
+
+
+#pragma comment(lib,"ws2_32.lib")
+
+#include<WS2tcpip.h>
+
+
+#pragma comment(lib,"Winmm.lib")
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.

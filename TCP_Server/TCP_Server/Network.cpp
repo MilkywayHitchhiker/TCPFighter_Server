@@ -1,24 +1,325 @@
 #include"stdafx.h"
 #include"Network.h"
-#include"Packet.h"
-#include"PacketDefine.h"
 #include"Game_Proc.h"
-#include"Create_Packet.h"
-#include"Sector.h"
+#include"PacketDefine.h"
+#include"DefineEnum.h"
+
+SOCKET g_ListenSock;		//리슨 소켓
+
+map<SOCKET, st_SESSION *> g_SessionMap;		//세션 구조체를 관리하기 위한 맵
+
+//Socket으로 세션 구조체 찾아서 반환 없는 유저일 경우 NULL 반환
+st_SESSION *FindSession (SOCKET sock)
+{
+	map<SOCKET, st_SESSION *>::iterator iter;
+
+	iter = g_SessionMap.find (sock);
+
+	if ( iter == g_SessionMap.end () )
+	{
+		return NULL;
+	}
+
+	return iter->second;
+
+}
+
+
+//새로운 세션 생성 및 등록
+st_SESSION *CreateSession (SOCKET Sock)
+{
+	st_SESSION *pNewSession;
+	pNewSession = new st_SESSION;
+
+	pNewSession->Sock = Sock;
+	pNewSession->dwSessionID = g_SessionID;
+	pNewSession->dwHeartBeat = timeGetTime ();
+	pNewSession->RecvQ.ClearBuffer ();
+	pNewSession->SendQ.ClearBuffer ();
+
+	g_SessionMap.insert (pair<SOCKET,st_SESSION *>(Sock,pNewSession));
+	g_SessionID++;
+	return pNewSession;
+}
+
+//해당 세션 종료처리
+void DisconnectSession (st_SESSION *pSession)
+{
+	st_CHARACTER *pChar;
+	Packet pack(100);
+
+	_LOG (dfLog_LEVEL_DEBUG, L"Disconnect SessionID : %d", pSession->dwSessionID);
+
+	pChar = FindCharacter (pSession->dwSessionID);
+	
+	//캐릭터 삭제 패킷 생성
+	Pack_DeleteCharacter (&pack, pSession->dwSessionID);
+
+	//주변타일에 삭제 요청 뿌림
+	SendPacket_Around (pSession, &pack,false);
+
+	//섹터에서 삭제
+	Sector_RemoveCharacter (pChar);
+
+	//캐릭터 맵에서 삭제
+	g_CharacterMap.erase (pSession->dwSessionID);
+
+	//세션 맵에서 삭제
+	g_SessionMap.erase (pSession->Sock);
+
+	//메모리 할당 해제.
+	delete pSession;
+
+	return;
+
+}
+
+//서버 메인 네트워크 처리 함수
+void NetworkProcess (void)
+{
+	st_SESSION *pSession;
+	SOCKET SockTable[FD_SETSIZE] = { INVALID_SOCKET, };	//소켓테이블 생성 및 초기화
+	int iSocketCount = 0;
+
+	FD_SET ReadSet;
+	FD_SET WriteSet;
+
+	//초기화
+	FD_ZERO (&ReadSet);
+	FD_ZERO (&WriteSet);
+
+	//리슨소켓을 Readset에 넣고 시작
+	FD_SET (g_ListenSock, &ReadSet);
+	SockTable[iSocketCount] = g_ListenSock;
+	iSocketCount++;
+
+	map<SOCKET, st_SESSION *>::iterator iter;
+	for ( iter = g_SessionMap.begin (); iter != g_SessionMap.end ();)
+	{
+		pSession = iter->second;
+
+		SockTable[iSocketCount] = pSession->Sock;
+
+		//ReadSet에 해당 유저 소켓 등록
+		FD_SET (pSession->Sock, &ReadSet);
+		//SendQ에 데이터가 있다면 보낼 데이터가 있는것이므로 WriteSet에 등록
+		if ( pSession->SendQ.GetUseSize () > 0 )
+		{
+			FD_SET (pSession->Sock, &WriteSet);
+		}
+
+		iSocketCount++;
+		iter++;
 
 
 
+		//Select가 FD_SETSIZE 에 도달했다면 Select호출 후 정리
+		if ( FD_SETSIZE <= iSocketCount )
+		{
+			NetworkSelectProc (SockTable, &ReadSet, &WriteSet);
 
-#include<map>
+			//초기화
+			FD_ZERO (&ReadSet);
+			FD_ZERO (&WriteSet);
 
-using namespace std;
-
-map<SOCKET, st_NETWORK_SESSION *> g_Session;	//리슨소켓 접속시 이곳에서 대기
+			memset (SockTable, INVALID_SOCKET, sizeof (SOCKET) * FD_SETSIZE);
 
 
+			//단일 스레드에서 select 방식의 경우 소켓이 천개 이상일 경우와 서버의 로직에 부하가 걸리는 경우 접속자 처리가 느려지기때문에
+			//한번 루프 돌때마다 리슨소켓을 매번 체크해 준다.
+			FD_SET (g_ListenSock, &ReadSet);
+			SockTable[0] = g_ListenSock;
+			iSocketCount = 1;
+		}
+
+
+
+	}
+
+	//for문을 다 돌았는데 iSocketCount가 0보다 크다면 검사해야될 소켓이 남아있는것이므로 마지막으로 한번더 Select함수 호출
+	if ( iSocketCount > 0 )
+	{
+		NetworkSelectProc (SockTable, &ReadSet, &WriteSet);
+	}
+
+}
+
+//Seslct 모델 체크 함수
+void NetworkSelectProc (SOCKET *pSockTable, FD_SET *pReadSet, FD_SET *pWriteSet)
+{
+	timeval Time;
+
+	int iResult;
+	int iCnt;
+	bool ProcFlag;
+
+	Time.tv_sec = 0;
+	Time.tv_usec = 0;
+
+	iResult = select (0, pReadSet, pWriteSet, 0, &Time);
+
+
+	//리턴값이 0보다 크다면 데이터가 수신된 것이다.
+	if ( iResult > 0 )
+	{
+		for ( iCnt = 0; iResult > 0 && iCnt < FD_SETSIZE; iCnt++ )
+		{
+			ProcFlag = true;
+			if ( pSockTable[iCnt] == INVALID_SOCKET )
+			{
+				continue;
+			}
+
+			//WriteSet 체크
+			if ( FD_ISSET (pSockTable[iCnt], pWriteSet) )
+			{
+				ProcFlag = NetworkSend (pSockTable[iCnt]);
+				iResult--;
+			}
+
+			if ( FD_ISSET (pSockTable[iCnt], pReadSet) )
+			{
+
+				//NetworkSend 부분에서 에러의 상황으로 해당 클라이언트가 접속종료를 한 경우가 있기에 ProcFlag로 확인 후 Recv 진행
+				if ( ProcFlag )
+				{
+					//리슨소켓일 경우 접속 처리
+					if ( pSockTable[iCnt] == g_ListenSock )
+					{
+						NetworkAccept ();
+					}
+					else if ( pSockTable[iCnt] != g_ListenSock )
+					{
+						NetworkRecv (pSockTable[iCnt]);
+					}
+				}
+
+
+				iResult--;
+			}
+		}
+
+	}
+	else if ( iResult == SOCKET_ERROR )
+	{
+		//에러 처리
+		wprintf (L"select Error\n");
+	}
+
+
+
+}
+
+//Recv처리
+void NetworkRecv (SOCKET sock)
+{
+	st_SESSION *pSession;
+	int iBuffSize;
+	int iResult;
+
+	pSession = FindSession (sock);
+
+	if ( pSession == NULL )
+	{
+		return;
+	}
+
+	//마지막으로 받은 메세지 타임
+	pSession->dwHeartBeat = timeGetTime ();
+
+	//받기 작업
+
+	iBuffSize = pSession->RecvQ.GetNotBrokenPutSize ();
+
+	iResult = recv (pSession->Sock, pSession->RecvQ.GetWriteBufferPtr (), iBuffSize, 0);
+
+	//recv결과가 소켓 에러일 경우 연결 끊기.
+	if ( SOCKET_ERROR == iResult )
+	{
+		DisconnectSession (pSession);
+		return;
+	}
+
+	//받은 데이터가 있다면
+	if ( 0 < iResult )
+	{
+		//RecvQ에 데이터를 넣었으니 WritePos를 이동시켜줘야 된다.
+		pSession->RecvQ.MoveWritePos (iResult);
+
+		//패킷이 하나 이상 수신되었을 수 있으므로 모두 처리될 때 까지 계속 반복한다.
+		while ( 1 )
+		{
+			iResult = RecvPacket (pSession);
+			if ( 1 == iResult )
+			{
+				break;
+			}
+
+			if ( -1 == iResult )
+			{
+				_LOG (dfLog_LEVEL_ERROR, L"PRError SessionID : %d", pSession->dwSessionID);
+				return;
+			}
+
+		}
+	}
+
+
+
+}
+
+//Send처리
+bool NetworkSend (SOCKET sock)
+{
+	st_SESSION *pSession;
+	int iResult;
+	int iSendSize;
+
+	//해당 사용자 세션 찾기
+
+	pSession = FindSession (sock);
+	//찾는 사용자가 없다면 그냥 나옴.
+	if ( NULL == pSession )
+	{
+		return false;
+	}
+
+	//SendQ에 있는 데이터들을 최대 dfMaxSendSize 이하로 보낸다.
+	//이는 한개의 패킷에 담을 수 있는 최대 MTU사이즈이기 때문이다.
+	//이를 넘어서면 전송중간에 패킷이 분리되며 데이터가 깨질 우려가 있다.
+	iSendSize = pSession->SendQ.GetNotBrokenGetSize ();
+	iSendSize = min (dfMaxSendSize, iSendSize);
+
+	//SendQ에 보낼 데이터가 없으면 그냥 빠져나옴.
+	if ( 0 >= iSendSize )
+	{
+		return true;
+	}
+
+	//send처리
+	iResult = send (pSession->Sock, pSession->SendQ.GetReadBufferPtr (), iSendSize, 0);
+	pSession->SendQ.RemoveData (iResult);
+
+	//send에서 소켓에러가 뜬다면 해당 클라이언트 디스커넥트 처리
+	if ( iResult == SOCKET_ERROR )
+	{
+		//wprintf (L"socketError UserNo %lld\n", pClient->ClientNum);
+		DisconnectSession (pSession);
+		return false;
+	}
+	else if ( iSendSize < iResult )
+	{
+		//보낸 보낼 사이즈보다 오히려 더 크다면 오류기때문에 무조건 끊어주면 된다.
+		//생기면 안되는 상황이지만 가끔 이런 경우가 생길때가 있다.
+		DisconnectSession (pSession);
+		return false;
+	}
+
+	return true;
+}
 
 //네트워크 초기화
-bool Network_Init (void)
+void Network_Init (void)
 {
 	WSAData wsa;
 	int retval;
@@ -26,14 +327,14 @@ bool Network_Init (void)
 	//윈속 초기화
 	if ( WSAStartup (MAKEWORD (2, 2), &wsa) != 0 )
 	{
-		return false;
+		return;
 	}
 
 	//소켓 초기화
-	ListenSocket = socket (AF_INET, SOCK_STREAM, 0);
-	if ( ListenSocket == INVALID_SOCKET )
+	g_ListenSock = socket (AF_INET, SOCK_STREAM, 0);
+	if ( g_ListenSock == INVALID_SOCKET )
 	{
-		return false;
+		return;
 	}
 
 	//bind
@@ -42,311 +343,507 @@ bool Network_Init (void)
 	InetPton (AF_INET, ServerIP, &addr.sin_addr);
 	addr.sin_port = htons (dfNETWORK_PORT);
 
-	retval = bind (ListenSocket, ( SOCKADDR * )&addr, sizeof (addr));
+	retval = bind (g_ListenSock, ( SOCKADDR * )&addr, sizeof (addr));
 	if ( retval == SOCKET_ERROR )
-	{
-		return false;
-	}
-
-	//listen
-	retval = listen (ListenSocket, SOMAXCONN);
-	if ( retval == SOCKET_ERROR )
-	{
-		return false;
-	}
-
-	int opt_val = TRUE;
-	setsockopt (ListenSocket, IPPROTO_TCP, TCP_NODELAY, ( char * )&opt_val, sizeof (opt_val));
-
-	//네트워크 셋팅완료.
-	return true;
-}
-
-
-//유저번호를 받아서 클라이언트를 찾아서 return, 해당 클라 없을 시 NULL리턴.
-st_NETWORK_SESSION *FindSession (SOCKET sock)
-{
-	map<SOCKET, st_NETWORK_SESSION *>::iterator iter;
-	iter = g_Session.find (sock);
-
-	//Client검색 했는데 해당 유저가 없다면 NULL리턴.
-	if ( iter == g_Session.end () )
-	{
-		return NULL;
-	}
-
-	return iter->second;
-}
-
-
-//Select모델사용
-void NetworkProcess (void)
-{
-	SOCKET UserTable_SOCKET[FD_SETSIZE];
-
-	FD_SET ReadSet;
-	FD_SET WriteSet;
-	int iSocketCount = 0;
-
-	//초기화
-	FD_ZERO (&ReadSet);
-	FD_ZERO (&WriteSet);
-
-	memset (UserTable_SOCKET, INVALID_SOCKET, sizeof (SOCKET) * FD_SETSIZE);
-
-	//리슨소켓을 Readset에 넣고 시작
-	FD_SET (ListenSocket, &ReadSet);
-	UserTable_SOCKET[iSocketCount] = ListenSocket;
-	iSocketCount++;
-
-	map<SOCKET, st_NETWORK_SESSION *>::iterator iter;
-	for ( iter = g_Session.begin (); iter != g_Session.end ();)
-	{
-
-		UserTable_SOCKET[iSocketCount] = iter->first;
-
-		//ReadSet에 수신된 데이터가 있는지 확인하기 위해서 ReadSet에 소켓 삽입
-
-		FD_SET (UserTable_SOCKET[iSocketCount], &ReadSet);
-
-		//현재 유저의 SendQ에 UseSize가 0보다 크다면 보낼 데이터가 있는 것으로 판단. WriteSet에 소켓 삽입
-		if ( iter->second->SendQ.GetUseSize () > 0 )
-		{
-			FD_SET (UserTable_SOCKET[iSocketCount], &WriteSet);
-		}
-
-		iSocketCount++;
-
-		iter++;
-
-
-		//ReadSet에 소켓이 64개가 들어갔다면 Select모델 사용. Accept,Send,Recv 처리
-		if ( FD_SETSIZE <= iSocketCount )
-		{
-			SelectSocket (UserTable_SOCKET, &ReadSet, &WriteSet);
-
-
-			//소켓 초기화
-			FD_ZERO (&ReadSet);
-			FD_ZERO (&WriteSet);
-
-			memset (UserTable_SOCKET, INVALID_SOCKET, sizeof (SOCKET) * FD_SETSIZE);
-
-			iSocketCount = 0;
-
-
-		}
-
-	}
-
-	//iSocketCount가 0보다 크다면 처리되지 못한 사용자들이 남았으므로 추가 Select 처리 후 종료.
-	if ( iSocketCount > 0 )
-	{
-		SelectSocket (UserTable_SOCKET, &ReadSet, &WriteSet);
-
-	}
-
-
-	//모든 접속자 목록을 돌면서 INVALID_SOCKET으로 만든 접속자들 삭제.
-	Disconnect_Client (-1);
-
-
-}
-
-
-//Select함수 사용 Accept,Send,Recv처리
-void SelectSocket (SOCKET *UserSockTable, FD_SET *ReadSet, FD_SET *WriteSet)
-{
-	timeval Time;
-	int iResult, iCnt;
-	SOCKET Table[FD_SETSIZE];
-	memcpy (Table, UserSockTable, FD_SETSIZE);
-
-	//Select 대기시간 설정
-	Time.tv_sec = 0;
-	Time.tv_usec = 0;
-	//접속자 요청과 접속중인 클라이언트들의 메세지 체크
-	iResult = select (0, ReadSet, WriteSet, 0, &Time);
-
-	//iResult가 0보다 크다면 클라이언트가 보낸 데이터가 수신. 혹은 보내야될 데이터가 있는것이므로 체크
-	if ( 0 < iResult )
-	{
-
-		//최대 0~63까지 돌면서 수신 체크
-		for ( iCnt = 0; iCnt < FD_SETSIZE; iCnt++ )
-		{
-			if ( Table[iCnt] == INVALID_SOCKET )
-			{
-				continue;
-			}
-
-			//ReadSet 체크
-
-			if ( FD_ISSET (Table[iCnt], ReadSet) )
-			{
-				//ListenSocket이 아니면 새로운 접속자 이므로 Accept처리
-				if ( Table[iCnt] == ListenSocket )
-				{
-					Accept ();
-
-				}
-				else
-				{
-					//Recv 처리
-					Network_Recv (Table[iCnt]);
-				}
-
-			}
-
-
-
-
-			//WriteSet 체크
-			if ( FD_ISSET (Table[iCnt], WriteSet) )
-			{
-				//Send 처리
-				Network_Send (Table[iCnt]);
-
-			}
-
-
-
-		}
-
-
-	}
-	else if ( iResult == SOCKET_ERROR )
-	{
-		wprintf (L"Select Error\n");
-	}
-
-
-	return;
-}
-
-
-//신규 유저 Accept처리
-void Accept (void)
-{
-	SOCKET NewUser;
-	SOCKADDR_IN addr;
-
-
-	int addrlen = sizeof (addr);
-
-
-	//accept처리
-	NewUser = accept (ListenSocket, ( SOCKADDR * )&addr, &addrlen);
-
-
-	//신규접속이 제대로된 소켓이 아니라면 정리하고 종료
-	if ( NewUser == INVALID_SOCKET )
 	{
 		return;
 	}
 
-	st_NETWORK_SESSION *pNew = new st_NETWORK_SESSION;
-	pNew->AccountNo = AccountNo;		//나중에 로그인 요청시 처리할 부분.
-	pNew->Socket = NewUser;
+	//listen
+	retval = listen (g_ListenSock, SOMAXCONN);
+	if ( retval == SOCKET_ERROR )
+	{
+		return;
+	}
 
-	pNew->RecvQ.ClearBuffer ();
-	pNew->SendQ.ClearBuffer ();
+	int opt_val = TRUE;
+	setsockopt (g_ListenSock, IPPROTO_TCP, TCP_NODELAY, ( char * )&opt_val, sizeof (opt_val));
 
-
-	AccountNo++;
-
-
-	g_Session.insert (pair<SOCKET, st_NETWORK_SESSION *> (NewUser, pNew));	//키로 AcceptNo를 넣고 value로 st_Client 주소 저장. 
-
-	//신규접속 알림처리
-	Proc_Connect (pNew);
-
-	wprintf (L"Accept = IP : %d.%d.%d.%d Port : %d\n", addr.sin_addr.S_un.S_un_b.s_b1, addr.sin_addr.S_un.S_un_b.s_b2, addr.sin_addr.S_un.S_un_b.s_b3, addr.sin_addr.S_un.S_un_b.s_b4, addr.sin_port);
-
+	_LOG (dfLog_LEVEL_DEBUG, L"Server Start IP:%s\n",ServerIP);
+	//wprintf (L"Server Start IP:%s", ServerIP);
+	//네트워크 셋팅완료.
 	return;
+}
+
+//사용자 접속 이벤트 처리
+bool NetworkAccept (void)
+{
+	SOCKADDR_IN addr;
+	SOCKET sock;
+	int iSize = sizeof (addr);
+
+	sock = accept (g_ListenSock, ( SOCKADDR * )&addr, &iSize);
+
+	if ( INVALID_SOCKET == sock )
+	{
+		return false;
+	}
+
+	st_SESSION *pSession = CreateSession (sock);
+
+	PacketProc_Connect (pSession);
+
+	//inet_ntoa는 멀티바이트문자열이기 때문에 유니코드로 바꿔줘야 된다.
+	wchar_t strUnicode[256] = { 0, };
+	char	*strMultibyte;
+	strMultibyte = inet_ntoa (addr.sin_addr);
+
+	int nLen = MultiByteToWideChar (CP_ACP, 0, strMultibyte, strlen (strMultibyte), NULL, NULL);
+	MultiByteToWideChar (CP_ACP, 0, strMultibyte, strlen (strMultibyte), strUnicode, nLen);
+
+
+	_LOG (dfLog_LEVEL_DEBUG,L"Connect # IP:%s SessionID:%d", strUnicode, g_SessionID);
+
+
+	return true;
+
+}
+
+//패킷이 완료되었는지 검사 후 패킷 처리
+int RecvPacket (st_SESSION *pSession)
+{
+	st_PACK_HEADER PacketHeader;
+	int iRecvQSize;
+	BYTE byEndCode;
+
+	iRecvQSize = pSession->RecvQ.GetUseSize ();
+
+	//받은 사이즈가 패킷헤더보다 작다면 그냥 종료
+	if ( sizeof (st_PACK_HEADER) > iRecvQSize )
+	{
+		return 1;
+	}
+
+	// 1. PacketCode검사
+	pSession->RecvQ.Peek (( char * )&PacketHeader, sizeof (st_PACK_HEADER));
+
+	//Peek로 뽑아서 헤더 코드가 맞는지 검사. 틀리면 리턴
+	if ( dfPACKET_CODE != PacketHeader.byCode )
+	{
+		return -1;
+	}
+
+	// 2. 큐에 저장된 데이터가 패킷의 크기만큼 있는지 확인 EndCode 더해서 계산할것.
+	if ( PacketHeader.bySize + sizeof (st_PACK_HEADER) + 1 > iRecvQSize )
+	{
+		return 1;
+	}
+
+	//위에서 헤더를 Peek로 뽑았으므로 큐에서 헤더 사이즈 만큼 지워야 됨.
+	pSession->RecvQ.RemoveData (sizeof (st_PACK_HEADER));
+	
+	Packet pack;
+	
+	//Payload 부분을 버퍼로 빼옴.
+	if ( !pSession->RecvQ.Get (pack.GetBufferPtr (), PacketHeader.bySize))
+	{
+		return -1;
+	}
+
+	//EndCode를 버퍼로 빼서 확인.
+	if ( !pSession->RecvQ.Get (( char * )&byEndCode, 1) )
+	{
+		return -1;
+	}
+	if ( byEndCode != dfNETWORK_PACKET_END )
+	{
+		return -1;
+	}
+
+	//패킷 버퍼 포인터를 얻어 임의로 데이터를 넣었으므로 사이즈 이동처리
+	pack.MoveWritePos (PacketHeader.bySize);
+
+	//패킷처리 함수 호출
+	if ( !PacketProc (pSession, PacketHeader.byType, &pack) )
+	{
+		return -1;
+	}
+	return 0;
+
+
+}
+
+//패킷 타입에 따른 처리 함수 호출
+bool PacketProc (st_SESSION *pSession, BYTE PacketType, Packet *pPack)
+{
+	switch ( PacketType )
+	{
+	case dfPACKET_CS_MOVE_START :
+		PacketProc_MoveStart (pSession, pPack);
+		break;
+	case dfPACKET_CS_MOVE_STOP :
+		PacketProc_MoveStop (pSession, pPack);
+		break;
+	case dfPACKET_CS_ATTACK1 :
+		PacketProc_Attack1 (pSession, pPack);
+		break;
+	case dfPACKET_CS_ATTACK2 :
+		PacketProc_Attack2 (pSession, pPack);
+		break;
+	case dfPACKET_CS_ATTACK3 :
+		PacketProc_Attack3 (pSession, pPack);
+		break;
+	case dfPACKET_CS_ECHO :
+		PacketProc_ECHO (pSession, pPack);
+		break;
+	default : 
+		return false;
+		break;
+	}
+	return true;
 }
 
 
 // 사용자 접속/해지 알림.
-BOOL	Proc_Connect (st_NETWORK_SESSION *pNew)
+BOOL	PacketProc_Connect (st_SESSION *pSession)
 {
-	Packet pack;
-	
+	Packet	pack;
+	pack.Clear ();
+	_LOG (dfLog_LEVEL_DEBUG,L"# PACKET_CONNECT # SessionID:%d", pSession->dwSessionID);
+
+
 	//-----------------------------------------------------
 	// 새로운 사용자 접속을 처리한다.
 	//-----------------------------------------------------
-	Create_Player (pNew);
+	gameCreatePlayer (pSession);
+
+	st_SECTOR_AROUND Pos;
+	st_CHARACTER *pChar = FindCharacter (pSession->dwSessionID);
+	st_CHARACTER *pOtherChar;
 
 
+	list<st_CHARACTER *> *pSectorList;
+	list<st_CHARACTER *>::iterator iter;
+	//해당 클라이언트 주변 섹터 검색
+	GetSectorAround (pChar->CurSector.iX, pChar->CurSector.iY, &Pos);
+	
+	//얻어낸 섹터정보를 가지고 메세지 전송
 
 
-	// 기존에 있던 사용자들의 목록을 신규 유저에게 전송
-	map<DWORD, st_Charactor *>::iterator iter;
-	for ( iter = g_Charactor.begin(); iter != g_Charactor.end();  )
+	//나한테 내 생성정보 알림
+	Pack_CreateMyCharacter (&pack, pChar->dwSessionID, pChar->byDirection, pChar->shX, pChar->shY, pChar->chHP);
+	SendPacket_Unicast (pSession, &pack);
+	pack.Clear ();
+
+	
+	//자신한테 섹터 내 다른 유저들의 목록 전송
+	int iCnt;
+	for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 	{
-		//-----------------------------------------------------
-		// 사용자 목록을 모두 뽑아서, 패킷을 만들어 해당 사용자에게 전송 !
-		// 단, 방금 접속한 사용자 에게는 보내지 않는다.
-		//-----------------------------------------------------
-		st_Charactor *pCharactor = iter->second;
-
-		if ( pCharactor->AccountNo != pNew->AccountNo )
+		for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 		{
-			pack.Clear ();
+			pSectorList = &g_Sector[Pos.Around[iCnt].iY][Pos.Around[iCnt].iX];
+			for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
+			{
+				pOtherChar = *iter;
+				if ( pOtherChar != pChar )
+				{
+					Pack_CreateOtherCharacter (&pack, pOtherChar->dwSessionID, pOtherChar->byDirection, pOtherChar->shX, pOtherChar->shY, pOtherChar->chHP);
+					SendPacket_Unicast (pSession, &pack);
+					pack.Clear ();
+				}
+				iter++;
+			}
+		}
+	}
+	
+	//다른 유저들한테 나의 생성정보 알림
+	Pack_CreateOtherCharacter (&pack, pChar->dwSessionID, pChar->byDirection, pChar->shX, pChar->shY, pChar->chHP);
+	SendPacket_Around (pSession, &pack,false);
 
-			Create_OtherCharactor (&pack, pCharactor);
 
-			pNew->SendQ.Put (pack.GetBufferPtr (), pack.GetDataSize ());
+	
+	return true;
+}
+
+
+
+
+
+BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
+{
+	BYTE byDirection;
+	short shX, shY;
+	*pack >> byDirection;
+	*pack >> shX;
+	*pack >> shY;
+
+	_LOG (dfLog_LEVEL_WARNING, L"MoveStart SessionID:%d / Direction: %d / X: %d / Y: %d", pSession->dwSessionID, byDirection, shX, shY);
+
+	//ID로 캐릭터를 검색
+
+	st_CHARACTER *pCharacter = FindCharacter (pSession->dwSessionID);
+	if ( pCharacter == NULL )
+	{
+		_LOG (dfLog_LEVEL_ERROR, L"MoveStart SessionID:%d Charactor Not Found!", pSession->dwSessionID);
+		return false;
+	}
+
+	//서버의 위치와 받은 패킷의 위치값이 크게 다르다면 데드레커닝으로 재위치 확인.
+	//그래도 좌표가 다르다면 싱크패킷을 클라로 보내서 좌표보정.
+	if ( abs (pCharacter->shX - shX) > dfERROR_RANGE ||abs(pCharacter->shY - shY) > dfERROR_RANGE)
+	{
+		int iDirX, iDirY;
+		int iDeadFrame = DeadReckoningPos (pCharacter->dwAction, pCharacter->dwActionTick, pCharacter->shActionX, pCharacter->shActionY, &iDirX, &iDirY);
+		
+		if ( abs (iDirX - shX) > dfERROR_RANGE || abs (iDirY - shY) > dfERROR_RANGE )
+		{
+			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
+			SendPacket_Around (pCharacter->pSession, pack, true);
+		}
+		shX = iDirX;
+		shY = iDirY;
+	}
+
+	//동작을 변경. 동작번호와 방향값이 같다.
+	pCharacter->dwAction = byDirection;
+
+	//이동방향체크용
+	pCharacter->MoveDirection = byDirection;
+
+	//방향 변경
+	switch ( byDirection )
+	{
+	case dfPACKET_MOVE_DIR_RR :
+	case dfPACKET_MOVE_DIR_RU :
+	case dfPACKET_MOVE_DIR_RD :
+		pCharacter->byDirection = dfPACKET_MOVE_DIR_RR;
+		break;
+	case dfPACKET_MOVE_DIR_LU:
+	case dfPACKET_MOVE_DIR_LL:
+	case dfPACKET_MOVE_DIR_LD:
+		pCharacter->byDirection = dfPACKET_MOVE_DIR_LL;
+		break;
+	}
+	pCharacter->shX = shX;
+	pCharacter->shY = shY;
+
+	//정지를 하면서 좌표가 약간 조절된 경우섹터 업데이트를 함.
+	if ( Sector_UpdateCharacter (pCharacter) )
+	{
+		//섹터가 변경된 경우 클라에게 관련 정보를 쏜다
+		CharacterSectorUpdatePacket (pCharacter);
+	}
+
+	//이동 액션이 변경되는 시점에서 데드레커닝을 위한 정보 저장.
+
+	pCharacter->dwActionTick = timeGetTime ();
+	pCharacter->shActionX = pCharacter->shX;
+	pCharacter->shActionY = pCharacter->shY;
+
+	
+	Pack_MoveStart (pack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
+	
+	//섹터단위로 접속중인 사용자에게 패킷을 뿌린다.
+	SendPacket_Around (pSession, pack,false);
+	
+	return true;
+
+}
+
+BOOL	PacketProc_MoveStop (st_SESSION *pSession, Packet *pack)
+{
+	BYTE byDirection;
+	short shX, shY;
+
+	*pack >> byDirection;
+	*pack >> shX;
+	*pack >> shY;
+
+	_LOG (dfLog_LEVEL_DEBUG,L"# PACKET_MOVESTOP # SessionID:%d / Direction:%d / X:%d / Y:%d", pSession->dwSessionID, byDirection, shX, shY);
+
+	//ID로 캐릭터를 검색
+
+	st_CHARACTER *pCharacter = FindCharacter (pSession->dwSessionID);
+	if ( pCharacter == NULL )
+	{
+		_LOG (dfLog_LEVEL_ERROR, L"MoveStop SessionID:%d Charactor Not Found!", pSession->dwSessionID);
+		return false;
+	}
+
+	//서버의 위치와 받은 패킷의 위치값이 크게 다르다면 데드레커닝으로 재위치 확인.
+	//그래도 좌표가 다르다면 싱크패킷을 클라로 보내서 좌표보정.
+	if ( abs (pCharacter->shX - shX) > dfERROR_RANGE || abs (pCharacter->shY - shY) > dfERROR_RANGE )
+	{
+		int iDirX, iDirY;
+		int iDeadFrame = DeadReckoningPos (pCharacter->dwAction, pCharacter->dwActionTick, pCharacter->shActionX, pCharacter->shActionY, &iDirX, &iDirY);
+
+		if ( abs (iDirX - shX) > dfERROR_RANGE || abs (iDirY - shY) > dfERROR_RANGE )
+		{
+			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
+			SendPacket_Around (pCharacter->pSession, pack, true);
+			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->pSession, iDirX, iDirY);
+		}
+		shX = iDirX;
+		shY = iDirY;
+	}
+
+	//동작을 변경. 동작번호와 방향값이 같다.
+	pCharacter->dwAction = dfACTION_STAND;
+
+	//이동방향체크용
+	pCharacter->MoveDirection = byDirection;
+
+
+	pCharacter->shX = shX;
+	pCharacter->shY = shY;
+
+	//정지를 하면서 좌표가 약간 조절된 경우섹터 업데이트를 함.
+	if ( Sector_UpdateCharacter (pCharacter) )
+	{
+		//섹터가 변경된 경우 클라에게 관련 정보를 쏜다
+		CharacterSectorUpdatePacket (pCharacter);
+	}
+
+	//이동 액션이 변경되는 시점에서 데드레커닝을 위한 정보 저장.
+
+	pCharacter->dwActionTick = timeGetTime ();
+	pCharacter->shActionX = pCharacter->shX;
+	pCharacter->shActionY = pCharacter->shY;
+
+
+	Pack_MoveStop (pack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
+
+	//섹터단위로 접속중인 사용자에게 패킷을 뿌린다.
+	SendPacket_Around (pSession, pack,false);
+
+	return true;
+
+
+
+}
+
+BOOL	PacketProc_Attack1 (st_SESSION *pSession, Packet *pack)
+{
+	BYTE byDirection;
+	short shX, shY;
+
+	*pack >> byDirection;
+	*pack >> shX;
+	*pack >> shY;
+	return true;
+}
+
+BOOL	PacketProc_Attack2 (st_SESSION *pSession, Packet *pack)
+{
+	BYTE byDirection;
+	short shX, shY;
+
+	*pack >> byDirection;
+	*pack >> shX;
+	*pack >> shY;
+	return true;
+}
+
+BOOL	PacketProc_Attack3 (st_SESSION *pSession, Packet *pack)
+{
+	BYTE byDirection;
+	short shX, shY;
+
+	*pack >> byDirection;
+	*pack >> shX;
+	*pack >> shY;
+	return true;
+}
+
+
+BOOL	PacketProc_ECHO (st_SESSION *pSession, Packet *pack)
+{
+	st_PACK_HEADER Header;
+	Packet Pack (512);
+	
+	int Time;
+	
+	//패킷 데이터부 셋팅
+	Pack.Clear ();
+	*pack >> Time;
+	Pack << Time;
+
+	//헤더 셋팅
+	Header.byCode = dfPACKET_CODE;
+	Header.byType = dfPACKET_SC_ECHO;
+	Header.bySize = 4;
+
+	//완성된 패킷을 해당 클라이언트 SendQ에 저장.
+	pSession->SendQ.Put (( char * )&Header, sizeof (st_PACK_HEADER));
+	pSession->SendQ.Put (( char * )Pack.GetBufferPtr (), Pack.GetDataSize ());
+
+	return true;
+}
+
+
+
+//특정섹터 한 공간에만 메시지를 보내는 함수
+void SendPacket_SectorOne (int SectoriX, int SectoriY, Packet *pack, st_SESSION *pExceptSession)
+{
+	st_SESSION *pSession;
+	list<st_CHARACTER *> *pSectorList;
+	list<st_CHARACTER *>::iterator iter;
+
+	//섹터 내부에서만 돌도록.
+	if ( SectoriY < 0 || SectoriY >= dfSector_Max_Y )
+	{
+		return;
+	}
+	if ( SectoriX < 0 || SectoriX >= dfSector_Max_X )
+	{
+		return;
+	}
+
+	pSectorList = &g_Sector[SectoriY][SectoriX];
+	for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
+	{
+
+		// 해당 섹터에 모든 유저들에게 해당 패킷 발송.
+		pSession = (*iter)->pSession;
+		//pExceptSession은 제외하고 나머지한테만 보냄.
+		if ( pSession == pExceptSession )
+		{
+
+		}
+		else
+		{
+			pSession->SendQ.Put (( char * )pack->GetBufferPtr (), pack->GetDataSize());
 		}
 		iter++;
 	}
-	return TRUE;
+	return;
 }
 
-//1명에게만 보냄.
-BOOL	Send_Unicast (st_NETWORK_SESSION *pSession, Packet *pack)
+//한명에게만 보냄
+void SendPacket_Unicast (st_SESSION *pSession, Packet *pack)
 {
-	if ( NULL == pSession )
-		return FALSE;
-
-	pSession->SendQ.Put (pack->GetBufferPtr (), pack->GetDataSize ());
-
-	return TRUE;
+	pSession->SendQ.Put ((char *)pack->GetBufferPtr(), pack->GetDataSize());
+	return;
 }
 
-//모두에게 송신
-BOOL Send_Broadcast (Packet *pack)
+//클라이언트 기준 주변 섹터에 메세지 보내기 (최대 9개 영역)
+void SendPacket_Around (st_SESSION *pSession, Packet *pack, bool bSendMe)
 {
-	st_NETWORK_SESSION *pSession;
+	//세션으로 클라이언트 찾기
+	st_CHARACTER *pCharacter;
+	pCharacter = FindCharacter (pSession->dwSessionID);
 
-	map<SOCKET, st_NETWORK_SESSION *>::iterator iter;
-	for ( iter = g_Session.begin (); iter != g_Session.end (); )
+	//해당 클라이언트 주변 섹터 검색
+	st_SECTOR_AROUND Pos;
+	GetSectorAround (pCharacter->CurSector.iX, pCharacter->CurSector.iY, &Pos);
+
+	//얻어낸 섹터정보를 가지고 메세지 전송
+	int iCnt;
+	for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 	{
-		pSession = iter->second;
-		pSession->SendQ.Put (pack->GetBufferPtr (), pack->GetDataSize ());
-		iter++;
+		if ( bSendMe == false )
+		{
+			SendPacket_SectorOne (Pos.Around[iCnt].iX, Pos.Around[iCnt].iY, pack, pSession);
+		}
+		else
+		{
+			SendPacket_SectorOne (Pos.Around[iCnt].iX, Pos.Around[iCnt].iY, pack, NULL);
+		}
 	}
 }
 
-//섹터 송신
-BOOL Send_Sector (int X, int Y, st_Charactor *pClient, Packet *pack)
+//모든 접속자에게 다 보내기 (시스템 메세지외 사용하지 않음)
+void SendPacket_Broadcast (st_SESSION *pSession, Packet *pack)
 {
-	if ( X > 0 || X <= dfSector_Max_X )
-	{
-		return false;
-	}
-	if ( Y > 0 || Y <= dfSector_Max_Y )
-	{
-		return false;
-	}
-	
-	st_Charactor *pSession;
-
-	list<st_Charactor *>::iterator iter;
-	for ( iter = g_Sector[Y][X].begin (); iter != g_Sector[Y][X].end ();)
-	{
-		pSession = *iter;
-		pSession->Session->SendQ.Put (pack->GetBufferPtr (), pack->GetDataSize ());
-	}
-	return true;
 }

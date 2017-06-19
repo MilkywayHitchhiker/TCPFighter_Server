@@ -7,7 +7,7 @@ class Packet
 public:
 	enum PACKET
 	{
-		BUFFER_DEFAULT			= 512		// 패킷의 기본 버퍼 사이즈.
+		BUFFER_DEFAULT			= 1500		// 패킷의 기본 버퍼 사이즈.
 	};
 
 	// 생성자, 파괴자.

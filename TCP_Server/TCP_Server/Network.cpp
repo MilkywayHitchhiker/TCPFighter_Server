@@ -894,14 +894,14 @@ BOOL	PacketProc_Attack3 (st_SESSION *pSession, Packet *pack)
 BOOL	PacketProc_ECHO (st_SESSION *pSession, Packet *pack)
 {
 	st_PACK_HEADER Header;
-	
+	Packet TimePack;
 	int Time;
 	
 	*pack >> Time;
 
-	pack->Clear ();
-	Pack_ECHO (pack, Time);
-	SendPacket_Unicast (pSession, pack);
+	TimePack.Clear ();
+	Pack_ECHO (&TimePack, Time);
+	SendPacket_Unicast (pSession, &TimePack);
 	return true;
 }
 

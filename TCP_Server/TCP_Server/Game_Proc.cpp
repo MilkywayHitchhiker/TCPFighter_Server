@@ -19,8 +19,8 @@ BOOL	gameCreatePlayer (st_SESSION *pSession)
 
 	pNewChar->byDirection = dfACTION_MOVE_LL;
 	pNewChar->chHP = 100;
-	pNewChar->shX = (rand () % CreateRandshX) + 3000;
-	pNewChar->shY = (rand () % CreateRandshY) + 3000;
+	pNewChar->shX = (rand () % CreateRandshX) + CreateCharacterCenterX;
+	pNewChar->shY = (rand () % CreateRandshY) + CreateCharacterCenterY;
 	pNewChar->dwAction = dfACTION_STAND;
 	pNewChar->shActionX = pNewChar->shX;
 	pNewChar->shActionY = pNewChar->shY;
@@ -167,7 +167,7 @@ void Update (void)
 			case dfACTION_MOVE_DD:
 				if ( MoveCheck (pCharacter->shX, pCharacter->shY + dfSPEED_PLAYER_Y) )
 				{
-					pCharacter->shY -= dfSPEED_PLAYER_Y;
+					pCharacter->shY += dfSPEED_PLAYER_Y;
 					_LOG (dfLog_LEVEL_ERROR, L"Move_DD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
@@ -353,14 +353,17 @@ void Sector_AddCharacter (st_CHARACTER *pCharacter)
 		return;
 	}
 	
+	//섹터 좌표 구하기
 	int iSectorX = pCharacter->shX / dfSECTOR_PIXEL_WIDTH;
 	int iSectorY = pCharacter->shY / dfSECTOR_PIXEL_HEIGHT;
 	
+	//섹터 좌표가 최대섹터값을 넘어가면 잘못된좌표이므로 그냥 종료
 	if ( iSectorX >= dfSector_Max_X || iSectorY >= dfSector_Max_Y )
 	{
 		return;
 	}
 
+	//구한 섹터에 해당 캐릭터 집어넣고 캐릭터 정보에 섹터 저장.
 	g_Sector[iSectorY][iSectorX].push_back (pCharacter);
 	pCharacter->OldSector.iX = pCharacter->CurSector.iX = iSectorX;
 	pCharacter->OldSector.iY = pCharacter->CurSector.iY = iSectorY;
@@ -378,10 +381,11 @@ void Sector_RemoveCharacter (st_CHARACTER *pCharacter)
 	}
 
 	list<st_CHARACTER *>&SectorList = g_Sector[pCharacter->CurSector.iY][pCharacter->CurSector.iX];
+
 	list<st_CHARACTER *>::iterator iter;
 	for ( iter = SectorList.begin (); iter != SectorList.end ();)
 	{
-		if ( pCharacter == *iter )
+		if ( pCharacter == (*iter) )
 		{
 			SectorList.erase (iter);
 			break;
@@ -392,6 +396,7 @@ void Sector_RemoveCharacter (st_CHARACTER *pCharacter)
 	pCharacter->OldSector.iY = pCharacter->CurSector.iY;
 	pCharacter->CurSector.iX = -1;
 	pCharacter->CurSector.iY = -1;
+	return;
 
 }
 
@@ -399,9 +404,11 @@ void Sector_RemoveCharacter (st_CHARACTER *pCharacter)
 //현재 위치한 섹터에서 삭제 후 현재의 좌표로 섹터를 새롭게 계산해서 넣음
 bool Sector_UpdateCharacter (st_CHARACTER *pCharacter)
 {
+	//현재 저장되어있는 섹터는 이전 섹터가 된다.
 	int iBeforeSectorX = pCharacter->CurSector.iX;
 	int iBeforeSectorY = pCharacter->CurSector.iY;
 
+	//새로운 좌표로 계산.
 	int iNewSectorX = pCharacter->shX / dfSECTOR_PIXEL_WIDTH;
 	int iNewSectorY = pCharacter->shY / dfSECTOR_PIXEL_HEIGHT;
 
@@ -450,9 +457,9 @@ void GetSectorAround (int iSectorX, int iSectorY, st_SECTOR_AROUND *pSectorAroun
 			pSectorAround->Around[pSectorAround->iCount].iX = iSectorX + iCntX;
 			pSectorAround->Around[pSectorAround->iCount].iY = iSectorY + iCntY;
 			pSectorAround->iCount++;
-
 		}
 	}
+	return;
 }
 
 //섹터에서 섹터를 이동 하였을때 섹터 영향권에 빠진 섹터, 새로 추가된 섹터의 정보 구하는 함수
@@ -478,7 +485,7 @@ void GetUpdateSectorAround (st_CHARACTER *pCharacter, st_SECTOR_AROUND *pRemoveS
 		bFind = false;
 		for ( iCntCur = 0; iCntCur < CurSectorAround.iCount; iCntCur++ )
 		{
-			if ( OldSectorAround.Around[iCntOld].iX == CurSectorAround.Around[iCntCur].iX && OldSectorAround.Around[iCntOld].iY == CurSectorAround.Around[iCntCur].iY )
+			if ( (OldSectorAround.Around[iCntOld].iX == CurSectorAround.Around[iCntCur].iX) && (OldSectorAround.Around[iCntOld].iY == CurSectorAround.Around[iCntCur].iY) )
 			{
 				bFind = true;
 				break;
@@ -497,7 +504,7 @@ void GetUpdateSectorAround (st_CHARACTER *pCharacter, st_SECTOR_AROUND *pRemoveS
 		bFind = false;
 		for ( iCntOld = 0; iCntOld < OldSectorAround.iCount; iCntOld++ )
 		{
-			if ( OldSectorAround.Around[iCntOld].iX == CurSectorAround.Around[iCntCur].iX && OldSectorAround.Around[iCntOld].iY == CurSectorAround.Around[iCntCur].iY )
+			if ( (OldSectorAround.Around[iCntOld].iX == CurSectorAround.Around[iCntCur].iX) && (OldSectorAround.Around[iCntOld].iY == CurSectorAround.Around[iCntCur].iY) )
 			{
 				bFind = true;
 				break;
@@ -505,7 +512,7 @@ void GetUpdateSectorAround (st_CHARACTER *pCharacter, st_SECTOR_AROUND *pRemoveS
 		}
 		if ( bFind == false )
 		{
-			pAddSector->Around[pAddSector->iCount] = CurSectorAround.Around[iCntOld];
+			pAddSector->Around[pAddSector->iCount] = CurSectorAround.Around[iCntCur];
 			pAddSector->iCount++;
 		}
 	}
@@ -529,37 +536,33 @@ void CharacterSectorUpdatePacket (st_CHARACTER *pCharacter)
 
 	GetUpdateSectorAround (pCharacter, &RemoveSector, &AddSector);
 
-	// 1.RemoveSector에 캐릭터 삭제 패킷 보내기
+	pack.Clear ();
+	// 1.RemoveSector에 인자로 받은 캐릭터 삭제 패킷 보내기
 	Pack_DeleteCharacter (&pack, pCharacter->dwSessionID);
 
 	for ( iCnt = 0; iCnt < RemoveSector.iCount; iCnt++ )
 	{
-
 		//특정섹터 한 공간에만 메시지를 보내는 함수
-		SendPacket_SectorOne (RemoveSector.Around[iCnt].iX, RemoveSector.Around[iCnt].iY, &pack, NULL);
+		SendPacket_SectorOne (RemoveSector.Around[iCnt].iX, RemoveSector.Around[iCnt].iY, &pack,NULL);
 	}
+
 
 	// 2. 지금 움직이는 녀석에게 RemoveSector의 캐릭터들 삭제 패킷 보내기
 	for ( iCnt = 0; iCnt < RemoveSector.iCount; iCnt++ )
 	{
-		if ( RemoveSector.Around[iCnt].iY < 0 || RemoveSector.Around[iCnt].iY >= dfSector_Max_Y )
-		{
-			continue;
-		}
-		if ( RemoveSector.Around[iCnt].iX < 0 || RemoveSector.Around[iCnt].iX >= dfSector_Max_X )
-		{
-			continue;
-		}
 		pSectorList = &g_Sector[RemoveSector.Around[iCnt].iY][RemoveSector.Around[iCnt].iX];
 		for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
 		{
-			// 1.현재 캐릭터에게 삭제되는 섹터 캐릭터 삭제 패킷 보내기
-			Pack_DeleteCharacter (&pack, (*iter)->dwSessionID);
+			pack.Clear ();
+			pExistCharacter = *iter;
+			// 1.현재 캐릭터에게 Remove 섹터 캐릭터 삭제 패킷 보내기
+			Pack_DeleteCharacter (&pack, pExistCharacter->dwSessionID);
 			SendPacket_Unicast (pCharacter->pSession, &pack);
 			iter++;
 		}
 	}
 
+	pack.Clear ();
 	// 3. AddSector에 캐릭터 생성 패킷 보내기
 	Pack_CreateOtherCharacter (&pack, pCharacter->dwSessionID, pCharacter->byDirection, pCharacter->shX, pCharacter->shY, pCharacter->chHP);
 	for ( iCnt = 0; iCnt < AddSector.iCount; iCnt++ )
@@ -567,27 +570,29 @@ void CharacterSectorUpdatePacket (st_CHARACTER *pCharacter)
 		//특정섹터 한 공간에만 메시지를 보내는 함수
 		SendPacket_SectorOne (AddSector.Around[iCnt].iX, AddSector.Around[iCnt].iY, &pack, NULL);
 	}
+	//AddSectordp 캐릭터가 걷고 있었다면 이동 패킷 만들어서 보냄
+	pack.Clear ();
+	Pack_MoveStart (&pack, pCharacter->dwSessionID, pCharacter->MoveDirection, pCharacter->shX, pCharacter->shY);
 
+	for ( iCnt = 0; iCnt < AddSector.iCount; iCnt++ )
+	{
+		SendPacket_SectorOne (AddSector.Around[iCnt].iX, AddSector.Around[iCnt].iY, &pack, NULL);
+	}
+
+
+	pack.Clear ();
 	// 4.이동한 녀석에게 AddSector에 있는 캐릭터들 생성 패킷 보내기
 	for ( iCnt = 0; iCnt < AddSector.iCount; iCnt++ )
 	{
-		if ( AddSector.Around[iCnt].iY < 0 || AddSector.Around[iCnt].iY >= dfSector_Max_Y )
-		{
-			continue;
-		}
-		if ( AddSector.Around[iCnt].iX < 0 || AddSector.Around[iCnt].iX >= dfSector_Max_X )
-		{
-			continue;
-		}
 		//얻어진 섹터를 돌면서 섹터리스트 접근
 		pSectorList = &g_Sector[AddSector.Around[iCnt].iY][AddSector.Around[iCnt].iX];
-
 
 		//해당 섹터마다 등록된 캐릭터들을 뽑아서 생성패킷 만들어 보냄
 		for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
 		{
 			pExistCharacter = *iter;
 			iter++;
+			pack.Clear ();
 				Pack_CreateOtherCharacter (&pack, pExistCharacter->dwSessionID, pExistCharacter->byDirection, pExistCharacter->shX, pExistCharacter->shY, pExistCharacter->chHP);
 				SendPacket_Unicast (pCharacter->pSession, &pack);
 
@@ -602,24 +607,27 @@ void CharacterSectorUpdatePacket (st_CHARACTER *pCharacter)
 				case dfACTION_MOVE_RU :
 				case dfACTION_MOVE_RR :
 				case dfACTION_MOVE_RD :
+					pack.Clear ();
 					Pack_MoveStart (&pack, pExistCharacter->dwSessionID, pExistCharacter->MoveDirection, pExistCharacter->shX, pExistCharacter->shY);
 					SendPacket_Unicast (pCharacter->pSession, &pack);
 					break;
 				case dfACTION_ATTACK1 :
+					pack.Clear ();
 					Pack_Attack1 (&pack, pExistCharacter->dwSessionID, pExistCharacter->byDirection, pExistCharacter->shX, pExistCharacter->shY);
 					SendPacket_Unicast (pCharacter->pSession, &pack);
 					break;
 				case dfACTION_ATTACK2 :
+					pack.Clear ();
 					Pack_Attack2 (&pack, pExistCharacter->dwSessionID, pExistCharacter->byDirection, pExistCharacter->shX, pExistCharacter->shY);
 					SendPacket_Unicast (pCharacter->pSession, &pack);
 					break;
 				case dfACTION_ATTACK3 :
+					pack.Clear ();
 					Pack_Attack3 (&pack, pExistCharacter->dwSessionID, pExistCharacter->byDirection, pExistCharacter->shX, pExistCharacter->shY);
 					SendPacket_Unicast (pCharacter->pSession, &pack);
 					break;
 				}
-			
-
 		}
 	}
+	return;
 }

@@ -171,7 +171,7 @@ void	Pack_Sync (Packet *pack, DWORD dwSessionID, short shX, short shY)
 
 	stPacketHeader.byCode = dfPACKET_CODE;
 	stPacketHeader.bySize = 6;
-	stPacketHeader.byType = dfPACKET_SC_DAMAGE;
+	stPacketHeader.byType = dfPACKET_SC_SYNC;
 
 	pack->PutData (( char * )&stPacketHeader, sizeof (st_PACK_HEADER));
 
@@ -180,5 +180,4 @@ void	Pack_Sync (Packet *pack, DWORD dwSessionID, short shX, short shY)
 	*pack << shY;
 	*pack << ( BYTE )dfNETWORK_PACKET_END;
 
-	
 }

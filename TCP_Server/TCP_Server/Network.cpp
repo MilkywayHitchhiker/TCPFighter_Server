@@ -56,7 +56,7 @@ void DisconnectSession (st_SESSION *pSession)
 	Pack_DeleteCharacter (&pack, pSession->dwSessionID);
 
 	//주변타일에 삭제 요청 뿌림
-	SendPacket_Around (pSession, &pack,false);
+	SendPacket_Around (pSession, &pack,true);
 
 	//섹터에서 삭제
 	Sector_RemoveCharacter (pChar);
@@ -66,6 +66,8 @@ void DisconnectSession (st_SESSION *pSession)
 
 	//세션 맵에서 삭제
 	g_SessionMap.erase (pSession->Sock);
+
+	delete pChar;
 
 	//메모리 할당 해제.
 	delete pSession;
@@ -234,7 +236,7 @@ void NetworkRecv (SOCKET sock)
 	iResult = recv (pSession->Sock, pSession->RecvQ.GetWriteBufferPtr (), iBuffSize, 0);
 
 	//recv결과가 소켓 에러일 경우 연결 끊기.
-	if ( SOCKET_ERROR == iResult )
+	if ( SOCKET_ERROR == iResult || 0 == iResult)
 	{
 		DisconnectSession (pSession);
 		return;
@@ -303,7 +305,7 @@ bool NetworkSend (SOCKET sock)
 	//send에서 소켓에러가 뜬다면 해당 클라이언트 디스커넥트 처리
 	if ( iResult == SOCKET_ERROR )
 	{
-		//wprintf (L"socketError UserNo %lld\n", pClient->ClientNum);
+		_LOG (dfLog_LEVEL_ERROR, L"##Send_SOCKET_ERROR ID : %d", pSession->dwSessionID);
 		DisconnectSession (pSession);
 		return false;
 	}
@@ -423,7 +425,7 @@ int RecvPacket (st_SESSION *pSession)
 		return -1;
 	}
 
-	// 2. 큐에 저장된 데이터가 패킷의 크기만큼 있는지 확인 EndCode 더해서 계산할것.
+	// 2. 큐에 저장된 데이터가 패킷의 크기만큼 있는지 확인 EndCode 크기 더해서 계산할것.
 	if ( PacketHeader.bySize + sizeof (st_PACK_HEADER) + 1 > iRecvQSize )
 	{
 		return 1;
@@ -433,7 +435,7 @@ int RecvPacket (st_SESSION *pSession)
 	pSession->RecvQ.RemoveData (sizeof (st_PACK_HEADER));
 	
 	Packet pack;
-	
+	pack.Clear ();
 	//Payload 부분을 버퍼로 빼옴.
 	if ( !pSession->RecvQ.Get (pack.GetBufferPtr (), PacketHeader.bySize))
 	{
@@ -520,33 +522,32 @@ BOOL	PacketProc_Connect (st_SESSION *pSession)
 	//얻어낸 섹터정보를 가지고 메세지 전송
 
 
+	pack.Clear ();
 	//나한테 내 생성정보 알림
 	Pack_CreateMyCharacter (&pack, pChar->dwSessionID, pChar->byDirection, pChar->shX, pChar->shY, pChar->chHP);
 	SendPacket_Unicast (pSession, &pack);
-	pack.Clear ();
 
 	
 	//자신한테 섹터 내 다른 유저들의 목록 전송
 	int iCnt;
 	for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 	{
-		for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
+
+		pSectorList = &g_Sector[Pos.Around[iCnt].iY][Pos.Around[iCnt].iX];
+		for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
 		{
-			pSectorList = &g_Sector[Pos.Around[iCnt].iY][Pos.Around[iCnt].iX];
-			for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
+			pOtherChar = *iter;
+			if ( pOtherChar != pChar )
 			{
-				pOtherChar = *iter;
-				if ( pOtherChar != pChar )
-				{
-					Pack_CreateOtherCharacter (&pack, pOtherChar->dwSessionID, pOtherChar->byDirection, pOtherChar->shX, pOtherChar->shY, pOtherChar->chHP);
-					SendPacket_Unicast (pSession, &pack);
-					pack.Clear ();
-				}
-				iter++;
+				pack.Clear ();
+				Pack_CreateOtherCharacter (&pack, pOtherChar->dwSessionID, pOtherChar->byDirection, pOtherChar->shX, pOtherChar->shY, pOtherChar->chHP);
+				SendPacket_Unicast (pSession, &pack);
 			}
+			iter++;
 		}
 	}
-	
+
+	pack.Clear ();
 	//다른 유저들한테 나의 생성정보 알림
 	Pack_CreateOtherCharacter (&pack, pChar->dwSessionID, pChar->byDirection, pChar->shX, pChar->shY, pChar->chHP);
 	SendPacket_Around (pSession, &pack,false);
@@ -581,7 +582,7 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 
 	//서버의 위치와 받은 패킷의 위치값이 크게 다르다면 데드레커닝으로 재위치 확인.
 	//그래도 좌표가 다르다면 싱크패킷을 클라로 보내서 좌표보정.
-	if ( abs (pCharacter->shX - shX) > dfERROR_RANGE ||abs(pCharacter->shY - shY) > dfERROR_RANGE)
+	if ( abs (pCharacter->shX - shX) > dfERROR_RANGE || abs(pCharacter->shY - shY) > dfERROR_RANGE)
 	{
 		int iDirX, iDirY;
 		int iDeadFrame = DeadReckoningPos (pCharacter->dwAction, pCharacter->dwActionTick, pCharacter->shActionX, pCharacter->shActionY, &iDirX, &iDirY);
@@ -590,9 +591,16 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 		{
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
+
+			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
 		}
+
+
+		//데드레커닝 좌표 캐릭터에 저장.
 		shX = iDirX;
 		shY = iDirY;
+
+
 	}
 
 	//동작을 변경. 동작번호와 방향값이 같다.
@@ -614,11 +622,17 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 	case dfPACKET_MOVE_DIR_LD:
 		pCharacter->byDirection = dfPACKET_MOVE_DIR_LL;
 		break;
+	case dfPACKET_MOVE_DIR_DD:
+		pCharacter->byDirection;
+		break;
+	case dfPACKET_MOVE_DIR_UU:
+		pCharacter->byDirection;
+		break;
 	}
 	pCharacter->shX = shX;
 	pCharacter->shY = shY;
 
-	//정지를 하면서 좌표가 약간 조절된 경우섹터 업데이트를 함.
+	//이동을 하면서 좌표가 약간 조절된 경우섹터 업데이트를 함.
 	if ( Sector_UpdateCharacter (pCharacter) )
 	{
 		//섹터가 변경된 경우 클라에게 관련 정보를 쏜다
@@ -631,11 +645,13 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 	pCharacter->shActionX = pCharacter->shX;
 	pCharacter->shActionY = pCharacter->shY;
 
+	Packet StartPack;
+	StartPack.Clear ();
 	
-	Pack_MoveStart (pack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
+	Pack_MoveStart (&StartPack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
 	
 	//섹터단위로 접속중인 사용자에게 패킷을 뿌린다.
-	SendPacket_Around (pSession, pack,false);
+	SendPacket_Around (pSession, &StartPack,false);
 	
 	return true;
 
@@ -672,18 +688,21 @@ BOOL	PacketProc_MoveStop (st_SESSION *pSession, Packet *pack)
 		{
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
-			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->pSession, iDirX, iDirY);
+
+			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
 		}
 		shX = iDirX;
 		shY = iDirY;
 	}
 
-	//동작을 변경. 동작번호와 방향값이 같다.
+	//동작을 변경.
 	pCharacter->dwAction = dfACTION_STAND;
 
 	//이동방향체크용
 	pCharacter->MoveDirection = byDirection;
 
+	//캐릭터가 서있는 방향
+	pCharacter->byDirection = byDirection;
 
 	pCharacter->shX = shX;
 	pCharacter->shY = shY;
@@ -701,11 +720,13 @@ BOOL	PacketProc_MoveStop (st_SESSION *pSession, Packet *pack)
 	pCharacter->shActionX = pCharacter->shX;
 	pCharacter->shActionY = pCharacter->shY;
 
+	Packet StopPack;
+	StopPack.Clear ();
 
-	Pack_MoveStop (pack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
+	Pack_MoveStop (&StopPack, pSession->dwSessionID, byDirection, pCharacter->shX, pCharacter->shY);
 
 	//섹터단위로 접속중인 사용자에게 패킷을 뿌린다.
-	SendPacket_Around (pSession, pack,false);
+	SendPacket_Around (pSession, &StopPack,false);
 
 	return true;
 
@@ -777,8 +798,6 @@ BOOL	PacketProc_ECHO (st_SESSION *pSession, Packet *pack)
 void SendPacket_SectorOne (int SectoriX, int SectoriY, Packet *pack, st_SESSION *pExceptSession)
 {
 	st_SESSION *pSession;
-	list<st_CHARACTER *> *pSectorList;
-	list<st_CHARACTER *>::iterator iter;
 
 	//섹터 내부에서만 돌도록.
 	if ( SectoriY < 0 || SectoriY >= dfSector_Max_Y )
@@ -790,7 +809,8 @@ void SendPacket_SectorOne (int SectoriX, int SectoriY, Packet *pack, st_SESSION 
 		return;
 	}
 
-	pSectorList = &g_Sector[SectoriY][SectoriX];
+	list<st_CHARACTER *> *pSectorList = &g_Sector[SectoriY][SectoriX];
+	list<st_CHARACTER *>::iterator iter;
 	for ( iter = pSectorList->begin (); iter != pSectorList->end ();)
 	{
 
@@ -830,13 +850,16 @@ void SendPacket_Around (st_SESSION *pSession, Packet *pack, bool bSendMe)
 
 	//얻어낸 섹터정보를 가지고 메세지 전송
 	int iCnt;
-	for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
+	if ( bSendMe == false )
 	{
-		if ( bSendMe == false )
+		for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 		{
 			SendPacket_SectorOne (Pos.Around[iCnt].iX, Pos.Around[iCnt].iY, pack, pSession);
 		}
-		else
+	}
+	else
+	{
+		for ( iCnt = 0; iCnt < Pos.iCount; iCnt++ )
 		{
 			SendPacket_SectorOne (Pos.Around[iCnt].iX, Pos.Around[iCnt].iY, pack, NULL);
 		}

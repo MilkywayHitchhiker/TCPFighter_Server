@@ -1,33 +1,12 @@
 #pragma once
 #include"Network.h"
-
-
-// 공격범위.
-#define dfATTACK1_RANGE_X		80
-#define dfATTACK2_RANGE_X		90
-#define dfATTACK3_RANGE_X		100
-#define dfATTACK1_RANGE_Y		10
-#define dfATTACK2_RANGE_Y		10
-#define dfATTACK3_RANGE_Y		20
-
-
-// 공격 데미지.
-#define dfATTACK1_DAMAGE		1
-#define dfATTACK2_DAMAGE		2
-#define dfATTACK3_DAMAGE		3
-
-
-// 캐릭터 이동 속도
-#define dfSPEED_PLAYER_X	6
-#define dfSPEED_PLAYER_Y	4
-
-
+#include"DefineEnum.h"
 
 // 이동 오류체크 범위
 #define dfERROR_RANGE		50
 
-#define dfSECTOR_PIXEL_WIDTH 50
-#define dfSECTOR_PIXEL_HEIGHT 50
+#define dfSECTOR_PIXEL_WIDTH 80
+#define dfSECTOR_PIXEL_HEIGHT 80
 
 #define dfSector_Max_X		6400 / dfSECTOR_PIXEL_WIDTH
 #define dfSector_Max_Y		6400 / dfSECTOR_PIXEL_HEIGHT
@@ -36,6 +15,9 @@
 
 #define CreateRandshX 100
 #define CreateRandshY 100
+#define CreateCharacterCenterX 3000
+#define CreateCharacterCenterY 3000
+
 
 
 

@@ -181,3 +181,18 @@ void	Pack_Sync (Packet *pack, DWORD dwSessionID, short shX, short shY)
 	*pack << ( BYTE )dfNETWORK_PACKET_END;
 
 }
+
+void	Pack_ECHO (Packet *pack, int Time)
+{
+	st_PACK_HEADER	stPacketHeader;
+
+	stPacketHeader.byCode = dfPACKET_CODE;
+	stPacketHeader.bySize = 4;
+	stPacketHeader.byType = 	dfPACKET_SC_ECHO;
+
+	pack->PutData (( char * )&stPacketHeader, sizeof (st_PACK_HEADER));
+
+	*pack << Time;
+	*pack << ( BYTE )dfNETWORK_PACKET_END;
+
+}

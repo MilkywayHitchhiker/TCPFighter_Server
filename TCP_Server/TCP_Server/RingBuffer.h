@@ -1,5 +1,5 @@
 #pragma once
-#define dfBuffSize 1400
+#define dfBuffSize 5000
 class CRingbuffer
 {
 protected:

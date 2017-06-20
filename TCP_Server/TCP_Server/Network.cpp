@@ -46,7 +46,7 @@ st_SESSION *CreateSession (SOCKET Sock)
 void DisconnectSession (st_SESSION *pSession)
 {
 	st_CHARACTER *pChar;
-	Packet pack(100);
+	Packet pack;
 
 	_LOG (dfLog_LEVEL_DEBUG, L"Disconnect SessionID : %d", pSession->dwSessionID);
 
@@ -589,6 +589,7 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 		
 		if ( abs (iDirX - shX) > dfERROR_RANGE || abs (iDirY - shY) > dfERROR_RANGE )
 		{
+			pack->Clear ();
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
 
@@ -686,6 +687,7 @@ BOOL	PacketProc_MoveStop (st_SESSION *pSession, Packet *pack)
 
 		if ( abs (iDirX - shX) > dfERROR_RANGE || abs (iDirY - shY) > dfERROR_RANGE )
 		{
+			pack->Clear ();
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
 
@@ -742,6 +744,47 @@ BOOL	PacketProc_Attack1 (st_SESSION *pSession, Packet *pack)
 	*pack >> byDirection;
 	*pack >> shX;
 	*pack >> shY;
+
+	_LOG (dfLog_LEVEL_DEBUG, L"# PACKET_ATTACK1 # SessionID:%d / Direction:%d / X:%d / Y:%d", pSession->dwSessionID, byDirection, shX, shY);
+
+	st_CHARACTER *pAttacker = FindCharacter (pSession->dwSessionID);
+
+
+	//클라이언트와 서버의 위치차이가 크게 난다면 클라이언트의 문제이므로 끊어버림.
+	if ( abs (pAttacker->shX - shX) > dfERROR_RANGE || abs (pAttacker->shY - shY) > dfERROR_RANGE )
+	{
+		DisconnectSession (pSession);
+		return true;
+	}
+
+	//동작 변경
+	pAttacker->byDirection = byDirection;
+	pAttacker->dwAction = dfACTION_ATTACK1;
+	pAttacker->shX = shX;
+	pAttacker->shY = shY;
+
+
+
+	Packet Damege;
+	Damege.Clear ();
+	//공격 패킷 만들어서 전송.
+	Pack_Attack1 (&Damege, pAttacker->dwSessionID, pAttacker->byDirection, pAttacker->shX, pAttacker->shY);
+	SendPacket_Around (pSession, &Damege);
+
+
+	st_CHARACTER *pCharDamege = AttackCheck (dfACTION_ATTACK1, pSession->dwSessionID);
+	//데미지 입는 사람 패킷 만들어서 전송.
+	if ( pCharDamege == NULL )
+	{
+		return true;
+	}
+
+	Damege.Clear ();
+	pCharDamege->chHP -= dfATTACK1_DAMAGE;
+	Pack_Damage (&Damege, pAttacker->dwSessionID, pCharDamege->dwSessionID, pCharDamege->chHP);
+
+	SendPacket_Around (pCharDamege->pSession, &Damege, true);
+
 	return true;
 }
 
@@ -753,6 +796,46 @@ BOOL	PacketProc_Attack2 (st_SESSION *pSession, Packet *pack)
 	*pack >> byDirection;
 	*pack >> shX;
 	*pack >> shY;
+
+	_LOG (dfLog_LEVEL_DEBUG, L"# PACKET_ATTACK2 # SessionID:%d / Direction:%d / X:%d / Y:%d", pSession->dwSessionID, byDirection, shX, shY);
+
+	st_CHARACTER *pAttacker = FindCharacter (pSession->dwSessionID);
+
+
+	//클라이언트와 서버의 위치차이가 크게 난다면 클라이언트의 문제이므로 끊어버림.
+	if ( abs (pAttacker->shX - shX) > dfERROR_RANGE || abs (pAttacker->shY - shY) > dfERROR_RANGE )
+	{
+		DisconnectSession (pSession);
+		return true;
+	}
+
+	//동작 변경
+	pAttacker->byDirection = byDirection;
+	pAttacker->dwAction = dfACTION_ATTACK2;
+	pAttacker->shX = shX;
+	pAttacker->shY = shY;
+
+
+
+	Packet Damege;
+	Damege.Clear ();
+	//공격 패킷 만들어서 전송.
+	Pack_Attack2 (&Damege, pAttacker->dwSessionID, pAttacker->byDirection, pAttacker->shX, pAttacker->shY);
+	SendPacket_Around (pSession, &Damege);
+
+
+	st_CHARACTER *pCharDamege = AttackCheck (dfACTION_ATTACK2, pSession->dwSessionID);
+	//데미지 입는 사람 패킷 만들어서 전송.
+	if ( pCharDamege == NULL )
+	{
+		return true;
+	}
+	Damege.Clear ();
+	pCharDamege->chHP -= dfATTACK2_DAMAGE;
+	Pack_Damage (&Damege, pAttacker->dwSessionID, pCharDamege->dwSessionID, pCharDamege->chHP);
+
+	SendPacket_Around (pCharDamege->pSession, &Damege, true);
+
 	return true;
 }
 
@@ -764,6 +847,46 @@ BOOL	PacketProc_Attack3 (st_SESSION *pSession, Packet *pack)
 	*pack >> byDirection;
 	*pack >> shX;
 	*pack >> shY;
+
+	_LOG (dfLog_LEVEL_DEBUG, L"# PACKET_ATTACK3 # SessionID:%d / Direction:%d / X:%d / Y:%d", pSession->dwSessionID, byDirection, shX, shY);
+
+	st_CHARACTER *pAttacker = FindCharacter (pSession->dwSessionID);
+
+
+	//클라이언트와 서버의 위치차이가 크게 난다면 클라이언트의 문제이므로 끊어버림.
+	if ( abs (pAttacker->shX - shX) > dfERROR_RANGE || abs (pAttacker->shY - shY) > dfERROR_RANGE )
+	{
+		DisconnectSession (pSession);
+		return true;
+	}
+
+	//동작 변경
+	pAttacker->byDirection = byDirection;
+	pAttacker->dwAction = dfACTION_ATTACK3;
+	pAttacker->shX = shX;
+	pAttacker->shY = shY;
+
+
+
+	Packet Damege;
+	Damege.Clear ();
+	//공격 패킷 만들어서 전송.
+	Pack_Attack3 (&Damege, pAttacker->dwSessionID, pAttacker->byDirection, pAttacker->shX, pAttacker->shY);
+	SendPacket_Around (pSession, &Damege);
+
+
+	st_CHARACTER *pCharDamege = AttackCheck (dfACTION_ATTACK3, pAttacker->dwSessionID);
+	//데미지 입는 사람 패킷 만들어서 전송.
+	if ( pCharDamege == NULL )
+	{
+		return true;
+	}
+	Damege.Clear ();
+	pCharDamege->chHP -= dfATTACK3_DAMAGE;
+	Pack_Damage (&Damege, pAttacker->dwSessionID, pCharDamege->dwSessionID, pCharDamege->chHP);
+
+	SendPacket_Around (pCharDamege->pSession, &Damege, true);
+
 	return true;
 }
 
@@ -771,24 +894,14 @@ BOOL	PacketProc_Attack3 (st_SESSION *pSession, Packet *pack)
 BOOL	PacketProc_ECHO (st_SESSION *pSession, Packet *pack)
 {
 	st_PACK_HEADER Header;
-	Packet Pack (512);
 	
 	int Time;
 	
-	//패킷 데이터부 셋팅
-	Pack.Clear ();
 	*pack >> Time;
-	Pack << Time;
 
-	//헤더 셋팅
-	Header.byCode = dfPACKET_CODE;
-	Header.byType = dfPACKET_SC_ECHO;
-	Header.bySize = 4;
-
-	//완성된 패킷을 해당 클라이언트 SendQ에 저장.
-	pSession->SendQ.Put (( char * )&Header, sizeof (st_PACK_HEADER));
-	pSession->SendQ.Put (( char * )Pack.GetBufferPtr (), Pack.GetDataSize ());
-
+	pack->Clear ();
+	Pack_ECHO (pack, Time);
+	SendPacket_Unicast (pSession, pack);
 	return true;
 }
 

@@ -20,3 +20,5 @@ void	Pack_Attack3 (Packet *pack, DWORD dwSessionID, BYTE byDir, short shX, short
 void	Pack_Damage (Packet *pack, DWORD dwAttackID, DWORD dwDamageID, short shHP);
 
 void	Pack_Sync (Packet *pack, DWORD dwSessionID,short shX, short shY );
+
+void	Pack_ECHO (Packet *pack, int Time);

@@ -44,9 +44,106 @@ BOOL	gameCreatePlayer (st_SESSION *pSession)
 st_CHARACTER *AttackCheck (int iAttackType, DWORD dwSessionID)
 {
 	st_CHARACTER	*pAttackChar = FindCharacter (dwSessionID);
-	st_CHARACTER	*pDamageChar;
+	list<st_CHARACTER *> *pList;
+	list<st_CHARACTER *>::iterator iter;
 
-	bool attack = false;
+	int iCnt;
+
+	st_SECTOR_AROUND Secter;
+
+	GetSectorAround (pAttackChar->CurSector.iX, pAttackChar->CurSector.iY, &Secter);
+
+	for ( iCnt = 0; iCnt < Secter.iCount; iCnt++ )
+	{
+		pList = &g_Sector[Secter.Around[iCnt].iY][Secter.Around[iCnt].iX];
+		for ( iter = pList->begin (); iter != pList->end ();)
+		{
+			//공격자 자기자신과는 비교하면 안된다.
+			if ( (*iter) == pAttackChar )
+			{
+				iter++;
+				continue;
+			}
+			switch ( iAttackType )
+			{
+			case dfACTION_ATTACK1:
+				//공격자와 Y축이 비슷하다면 같은 라인에 있는것으로 볼 수 있다.
+				if ( dfATTACK1_RANGE_Y > abs ((*iter)->shY - pAttackChar->shY) )
+				{
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_LL )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK1_RANGE_X >= pAttackChar->shX  - (*iter)->shX && 0 <= pAttackChar->shX - (*iter)->shX )
+						{
+							return *iter;
+						}
+					}
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_RR )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK1_RANGE_X >=  (*iter)->shX - pAttackChar->shX && 0 <=  (*iter)->shX - pAttackChar->shX )
+						{
+							return *iter;
+						}
+					}
+				}
+				break;
+			case dfACTION_ATTACK2:
+				//공격자와 Y축이 비슷하다면 같은 라인에 있는것으로 볼 수 있다.
+				if ( dfATTACK2_RANGE_Y > abs ((*iter)->shY - pAttackChar->shY) )
+				{
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_LL )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK2_RANGE_X >= pAttackChar->shX - (*iter)->shX && 0 <= pAttackChar->shX - (*iter)->shX )
+						{
+							return *iter;
+						}
+					}
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_RR )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK2_RANGE_X >= (*iter)->shX - pAttackChar->shX && 0 <= (*iter)->shX - pAttackChar->shX )
+						{
+							return *iter;
+						}
+					}
+				}
+				break;
+			case dfACTION_ATTACK3:
+				//공격자와 Y축이 비슷하다면 같은 라인에 있는것으로 볼 수 있다.
+				if ( dfATTACK3_RANGE_Y > abs ((*iter)->shY - pAttackChar->shY) )
+				{
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_LL )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK3_RANGE_X >= pAttackChar->shX - (*iter)->shX && 0 <= pAttackChar->shX - (*iter)->shX )
+						{
+							return *iter;
+						}
+					}
+					//왼쪽으로 서있는지 오른쪽으로 서있는지 확인
+					if ( pAttackChar->byDirection == dfACTION_MOVE_RR )
+					{
+						//공격자 등뒤로 공격하는 일을 막도록 한다.
+						if ( dfATTACK3_RANGE_X >= (*iter)->shX - pAttackChar->shX && 0 <= (*iter)->shX - pAttackChar->shX )
+						{
+							return *iter;
+						}
+					}
+				}
+				break;
+			}
+			iter++;
+
+		}
+
+	}
 	return NULL;
 }
 

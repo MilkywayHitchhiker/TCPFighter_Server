@@ -32,7 +32,7 @@ int main()
 
 		Update ();
 
-		KeyProcess ();
+//		KeyProcess ();
 	}
 
 

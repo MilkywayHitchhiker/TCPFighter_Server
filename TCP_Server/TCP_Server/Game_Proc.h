@@ -5,16 +5,16 @@
 // 이동 오류체크 범위
 #define dfERROR_RANGE		50
 
-#define dfSECTOR_PIXEL_WIDTH 80
-#define dfSECTOR_PIXEL_HEIGHT 80
+#define dfSECTOR_PIXEL_WIDTH 200
+#define dfSECTOR_PIXEL_HEIGHT 200
 
 #define dfSector_Max_X		6400 / dfSECTOR_PIXEL_WIDTH
 #define dfSector_Max_Y		6400 / dfSECTOR_PIXEL_HEIGHT
 
 #define dfFrameTick 40
 
-#define CreateRandshX 100
-#define CreateRandshY 100
+#define CreateRandshX 1500
+#define CreateRandshY 1500
 #define CreateCharacterCenterX 3000
 #define CreateCharacterCenterY 3000
 

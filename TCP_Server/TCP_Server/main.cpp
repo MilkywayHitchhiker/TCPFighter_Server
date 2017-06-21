@@ -11,7 +11,7 @@
 bool g_bShutdown = false;
 int g_SessionID = 0;
 
-int g_iLogLevel=0;			//출력. 저장 대상의 로그 레벨
+int g_iLogLevel=1;			//출력. 저장 대상의 로그 레벨
 WCHAR g_szLogBuff[1024];	//로그 저장시 필요한 임시 버퍼
 
 

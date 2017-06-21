@@ -219,7 +219,7 @@ void Update (void)
 				if ( MoveCheck (pCharacter->shX - dfSPEED_PLAYER_X, pCharacter->shY) )
 				{
 					pCharacter->shX -= dfSPEED_PLAYER_X;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_LL SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_LL SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_LU:
@@ -227,7 +227,7 @@ void Update (void)
 				{
 					pCharacter->shX -= dfSPEED_PLAYER_X;
 					pCharacter->shY -= dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_LU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_LU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_UU:
@@ -235,7 +235,7 @@ void Update (void)
 				{
 					pCharacter->shX;
 					pCharacter->shY -= dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_UU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_UU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_RU:
@@ -243,14 +243,14 @@ void Update (void)
 				{
 					pCharacter->shX += dfSPEED_PLAYER_X;
 					pCharacter->shY -= dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_RU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_RU SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_RR:
 				if ( MoveCheck (pCharacter->shX + dfSPEED_PLAYER_X, pCharacter->shY) )
 				{
 					pCharacter->shX += dfSPEED_PLAYER_X;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_RR SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_RR SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_RD:
@@ -258,14 +258,14 @@ void Update (void)
 				{
 					pCharacter->shX += dfSPEED_PLAYER_X;
 					pCharacter->shY += dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_RD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_RD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_DD:
 				if ( MoveCheck (pCharacter->shX, pCharacter->shY + dfSPEED_PLAYER_Y) )
 				{
 					pCharacter->shY += dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_DD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_DD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			case dfACTION_MOVE_LD:
@@ -273,7 +273,7 @@ void Update (void)
 				{
 					pCharacter->shX -= dfSPEED_PLAYER_X;
 					pCharacter->shY += dfSPEED_PLAYER_Y;
-					_LOG (dfLog_LEVEL_ERROR, L"Move_LD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
+					_LOG (dfLog_LEVEL_DEBUG, L"Move_LD SessionID : %d PosX : %d, PosY : %d", pCharacter->dwSessionID, pCharacter->shX, pCharacter->shY);
 				}
 				break;
 			}
@@ -522,7 +522,7 @@ bool Sector_UpdateCharacter (st_CHARACTER *pCharacter)
 	pCharacter->OldSector.iX = iBeforeSectorX;
 	pCharacter->OldSector.iY = iBeforeSectorY;
 
-	_LOG (dfLog_LEVEL_ERROR, L"SectorMove SessionID : %d SectorX : %d, SectorY : %d", pCharacter->dwSessionID, pCharacter->CurSector.iX, pCharacter->CurSector.iY);
+	_LOG (dfLog_LEVEL_DEBUG, L"SectorMove SessionID : %d SectorX : %d, SectorY : %d", pCharacter->dwSessionID, pCharacter->CurSector.iX, pCharacter->CurSector.iY);
 	return true;
 
 }

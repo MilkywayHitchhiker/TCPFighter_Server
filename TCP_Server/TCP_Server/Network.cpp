@@ -361,7 +361,7 @@ void Network_Init (void)
 	int opt_val = TRUE;
 	setsockopt (g_ListenSock, IPPROTO_TCP, TCP_NODELAY, ( char * )&opt_val, sizeof (opt_val));
 
-	_LOG (dfLog_LEVEL_DEBUG, L"Server Start IP:%s\n",ServerIP);
+	_LOG (dfLog_LEVEL_WARNING, L"Server Start IP:%s\n",ServerIP);
 	//wprintf (L"Server Start IP:%s", ServerIP);
 	//네트워크 셋팅완료.
 	return;
@@ -569,7 +569,7 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 	*pack >> shX;
 	*pack >> shY;
 
-	_LOG (dfLog_LEVEL_WARNING, L"MoveStart SessionID:%d / Direction: %d / X: %d / Y: %d", pSession->dwSessionID, byDirection, shX, shY);
+	_LOG (dfLog_LEVEL_DEBUG, L"MoveStart SessionID:%d / Direction: %d / X: %d / Y: %d", pSession->dwSessionID, byDirection, shX, shY);
 
 	//ID로 캐릭터를 검색
 
@@ -593,7 +593,7 @@ BOOL PacketProc_MoveStart (st_SESSION *pSession, Packet *pack)
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
 
-			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
+			_LOG (dfLog_LEVEL_ERROR, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
 		}
 
 
@@ -691,7 +691,7 @@ BOOL	PacketProc_MoveStop (st_SESSION *pSession, Packet *pack)
 			Pack_Sync (pack, pCharacter->dwSessionID, iDirX, iDirY);
 			SendPacket_Around (pCharacter->pSession, pack, true);
 
-			_LOG (dfLog_LEVEL_DEBUG, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
+			_LOG (dfLog_LEVEL_ERROR, L"SYNC SessionID : %d , iDirX : %d iDirY : %d", pCharacter->dwSessionID, iDirX, iDirY);
 		}
 		shX = iDirX;
 		shY = iDirY;

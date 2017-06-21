@@ -170,7 +170,7 @@ void	Pack_Sync (Packet *pack, DWORD dwSessionID, short shX, short shY)
 	st_PACK_HEADER	stPacketHeader;
 
 	stPacketHeader.byCode = dfPACKET_CODE;
-	stPacketHeader.bySize = 6;
+	stPacketHeader.bySize = 8;
 	stPacketHeader.byType = dfPACKET_SC_SYNC;
 
 	pack->PutData (( char * )&stPacketHeader, sizeof (st_PACK_HEADER));
@@ -182,13 +182,13 @@ void	Pack_Sync (Packet *pack, DWORD dwSessionID, short shX, short shY)
 
 }
 
-void	Pack_ECHO (Packet *pack, int Time)
+void	Pack_ECHO (Packet *pack, DWORD Time)
 {
 	st_PACK_HEADER	stPacketHeader;
 
 	stPacketHeader.byCode = dfPACKET_CODE;
 	stPacketHeader.bySize = 4;
-	stPacketHeader.byType = 	dfPACKET_SC_ECHO;
+	stPacketHeader.byType = dfPACKET_SC_ECHO;
 
 	pack->PutData (( char * )&stPacketHeader, sizeof (st_PACK_HEADER));
 

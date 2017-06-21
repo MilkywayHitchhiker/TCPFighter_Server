@@ -311,7 +311,7 @@ int DeadReckoningPos (DWORD dwAction, DWORD dwActionTick, short shActionX, short
 	//시간차를 구해서 몇 프레임이 지났는지 계산
 	DWORD dwIntervalTick = timeGetTime () - dwActionTick;
 
-	int iActionFrame = dwIntervalTick / 20;
+	int iActionFrame = dwIntervalTick / dfFrameTick;
 	int iRemoveFrame = 0;
 
 	int iVal;

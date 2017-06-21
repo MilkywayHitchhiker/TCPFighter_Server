@@ -290,7 +290,7 @@ bool NetworkSend (SOCKET sock)
 	//이는 한개의 패킷에 담을 수 있는 최대 MTU사이즈이기 때문이다.
 	//이를 넘어서면 전송중간에 패킷이 분리되며 데이터가 깨질 우려가 있다.
 	iSendSize = pSession->SendQ.GetNotBrokenGetSize ();
-	iSendSize = min (dfMaxSendSize, iSendSize);
+	//iSendSize = min (dfMaxSendSize, iSendSize);
 
 	//SendQ에 보낼 데이터가 없으면 그냥 빠져나옴.
 	if ( 0 >= iSendSize )

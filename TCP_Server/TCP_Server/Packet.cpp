@@ -8,7 +8,10 @@ Packet::Packet() : Buffer (NULL),DataFieldStart (NULL),DataFieldEnd (NULL),ReadP
 	//버퍼 사이즈를 입력하지 않는다면, 기본치로 생성.
 	Buffer = NULL;
 	BufferExpansion = NULL;
+
 	Initial();
+
+	return;
 }
 
 
@@ -16,7 +19,10 @@ Packet::Packet(int iBufferSize) : Buffer (NULL), DataFieldStart (NULL), DataFiel
 {
 	Buffer = NULL;
 	BufferExpansion = NULL;
+
 	Initial(iBufferSize);
+
+	return;
 }
 
 Packet::Packet(const Packet &SrcPacket) : Buffer (NULL),_iBufferSize (0), DataFieldStart (NULL), DataFieldEnd (NULL), ReadPos (NULL), WritePos (NULL)
@@ -30,12 +36,15 @@ Packet::Packet(const Packet &SrcPacket) : Buffer (NULL),_iBufferSize (0), DataFi
 	-------------------------------------------------------------------*/
 	PutData(SrcPacket.ReadPos, SrcPacket._iDataSize);
 	
+	return;
 }
 
 
 Packet::~Packet()
 {
 	Release();
+
+	return;
 }
 
 
@@ -69,7 +78,28 @@ void Packet::Initial(int iBufferSize)
 	ReadPos = WritePos = DataFieldStart;
 
 	_iDataSize = 0;
+
+	//크리티컬 섹션 초기화
+	InitializeCriticalSection (&cs);
+	
+	return;
 }
+
+
+
+//크리티컬 섹션 락
+void Packet::Lock (void)
+{
+	EnterCriticalSection (&cs);
+	return;
+}
+//크리티컬 섹션 락 해제
+void Packet::Free (void)
+{
+	LeaveCriticalSection (&cs);
+	return;
+}
+
 
 
 // 패킷  파괴.

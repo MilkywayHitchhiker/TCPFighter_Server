@@ -96,9 +96,14 @@ public:
 
 
 protected:
+	//크리티컬 섹션.
+	CRITICAL_SECTION cs;
 
 
-
+	//크리티컬 섹션 락
+	void Lock (void);
+	//크리티컬 섹션 락 해제
+	void Free (void);
 
 
 protected:
@@ -129,6 +134,9 @@ protected:
 	// 현재 버퍼에 사용중인 사이즈.
 	//------------------------------------------------------------
 	int		_iDataSize;
+
+
+
 
 
 };

@@ -6,18 +6,27 @@
 //생성자
 CRingbuffer::CRingbuffer (void)
 {
+
 	pBuffer = new char[dfBuffSize];
 	BufferSize = dfBuffSize;
 	Front = 0;
 	Rear = 0;
+
+	//크리티컬 섹션 초기화
+	InitializeCriticalSection (&cs);
+
 	return;
 }
 CRingbuffer::CRingbuffer (int iBufferSize)
 {
+
 	pBuffer = new char[iBufferSize];
 	BufferSize = iBufferSize;
 	Front = 0;
 	Rear = 0;
+
+	//크리티컬 섹션 초기화
+	InitializeCriticalSection (&cs);
 
 	return;
 }
@@ -38,6 +47,20 @@ void CRingbuffer::Initial (int iBufferSize)
 	Front = 0;
 	Rear = 0;
 
+	return;
+}
+
+
+//크리티컬 섹션 락
+void CRingbuffer::Lock (void)
+{
+	EnterCriticalSection (&cs);
+	return;
+}
+//크리티컬 섹션 락 해제
+void CRingbuffer::Free (void)
+{
+	LeaveCriticalSection (&cs);
 	return;
 }
 

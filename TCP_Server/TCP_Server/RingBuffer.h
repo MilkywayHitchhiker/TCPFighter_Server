@@ -1,8 +1,11 @@
 #pragma once
+#include <process.h>
 #define dfBuffSize 10000
 class CRingbuffer
 {
 protected:
+
+	CRITICAL_SECTION cs;
 
 	char *pBuffer;
 
@@ -24,6 +27,12 @@ public :
 
 	//파괴자
 	~CRingbuffer (void);
+
+	//크리티컬 섹션 락
+	void Lock (void);
+	//크리티컬 섹션 락 해제
+	void Free (void);
+
 	//초기화
 	void Initial (int iBufferSize);
 	

@@ -1,0 +1,272 @@
+[10/11/17 13:37:34] 10 Sec, AI Wait 
+
+[10/11/17 13:37:35] Loop/sec : 1
+[10/11/17 13:37:35] Packet/sec : 287659
+[10/11/17 13:37:35] Recv/sec : 4314615 Bytes
+[10/11/17 13:37:35] Send/sec : 405 Bytes
+[10/11/17 13:37:35] RTT : Avr 6ms / max 36ms / CheckCount 45
+[10/11/17 13:37:36] Loop/sec : 318
+[10/11/17 13:37:36] Packet/sec : 47
+[10/11/17 13:37:36] Recv/sec : 423 Bytes
+[10/11/17 13:37:36] Send/sec : 432 Bytes
+[10/11/17 13:37:36] RTT : Avr 5ms / max 9ms / CheckCount 47
+[10/11/17 13:37:37] Loop/sec : 336
+[10/11/17 13:37:37] Packet/sec : 48
+[10/11/17 13:37:37] Recv/sec : 432 Bytes
+[10/11/17 13:37:37] Send/sec : 423 Bytes
+[10/11/17 13:37:37] RTT : Avr 5ms / max 19ms / CheckCount 48
+[10/11/17 13:37:38] Loop/sec : 323
+[10/11/17 13:37:38] Packet/sec : 46
+[10/11/17 13:37:38] Recv/sec : 414 Bytes
+[10/11/17 13:37:38] Send/sec : 414 Bytes
+[10/11/17 13:37:38] RTT : Avr 6ms / max 35ms / CheckCount 46
+[10/11/17 13:37:39] Loop/sec : 311
+[10/11/17 13:37:39] Packet/sec : 38
+[10/11/17 13:37:39] Recv/sec : 342 Bytes
+[10/11/17 13:37:39] Send/sec : 351 Bytes
+[10/11/17 13:37:39] RTT : Avr 14ms / max 47ms / CheckCount 38
+[10/11/17 13:37:40] Loop/sec : 161
+[10/11/17 13:37:40] Packet/sec : 48
+[10/11/17 13:37:40] Recv/sec : 432 Bytes
+[10/11/17 13:37:40] Send/sec : 423 Bytes
+[10/11/17 13:37:40] RTT : Avr 5ms / max 38ms / CheckCount 48
+[10/11/17 13:37:41] Loop/sec : 324
+[10/11/17 13:37:41] Packet/sec : 46
+[10/11/17 13:37:41] Recv/sec : 414 Bytes
+[10/11/17 13:37:41] Send/sec : 414 Bytes
+[10/11/17 13:37:41] RTT : Avr 5ms / max 8ms / CheckCount 46
+[10/11/17 13:37:42] Loop/sec : 327
+[10/11/17 13:37:42] Packet/sec : 47
+[10/11/17 13:37:42] Recv/sec : 423 Bytes
+[10/11/17 13:37:42] Send/sec : 423 Bytes
+[10/11/17 13:37:42] RTT : Avr 5ms / max 22ms / CheckCount 47
+[10/11/17 13:37:43] Loop/sec : 337
+[10/11/17 13:37:43] Packet/sec : 47
+[10/11/17 13:37:43] Recv/sec : 423 Bytes
+[10/11/17 13:37:43] Send/sec : 423 Bytes
+[10/11/17 13:37:43] RTT : Avr 5ms / max 17ms / CheckCount 47
+[10/11/17 13:37:45] Loop/sec : 324
+[10/11/17 13:37:45] Packet/sec : 44
+[10/11/17 13:37:45] Recv/sec : 396 Bytes
+[10/11/17 13:37:45] Send/sec : 405 Bytes
+[10/11/17 13:37:45] RTT : Avr 6ms / max 17ms / CheckCount 44
+[10/11/17 13:37:45] Loop/sec : 291
+[10/11/17 13:37:45] Packet/sec : 21
+[10/11/17 13:37:45] Recv/sec : 189 Bytes
+[10/11/17 13:37:45] Send/sec : 180 Bytes
+[10/11/17 13:37:45] RTT : Avr 33ms / max 594ms / CheckCount 21
+[10/11/17 13:37:46] Loop/sec : 324
+[10/11/17 13:37:46] Packet/sec : 46
+[10/11/17 13:37:46] Recv/sec : 414 Bytes
+[10/11/17 13:37:46] Send/sec : 414 Bytes
+[10/11/17 13:37:46] RTT : Avr 5ms / max 30ms / CheckCount 46
+[10/11/17 13:37:47] Loop/sec : 332
+[10/11/17 13:37:47] Packet/sec : 6681
+[10/11/17 13:37:47] Recv/sec : 93299 Bytes
+[10/11/17 13:37:47] Send/sec : 753 Bytes
+[10/11/17 13:37:47] RTT : Avr 6ms / max 21ms / CheckCount 47
+[10/11/17 13:37:48] Loop/sec : 308
+[10/11/17 13:37:48] Packet/sec : 85681
+[10/11/17 13:37:48] Recv/sec : 1166744 Bytes
+[10/11/17 13:37:48] Send/sec : 3443 Bytes
+[10/11/17 13:37:48] RTT : Avr 11ms / max 16ms / CheckCount 46
+[10/11/17 13:37:49] Loop/sec : 264
+[10/11/17 13:37:49] Packet/sec : 135601
+[10/11/17 13:37:49] Recv/sec : 1793311 Bytes
+[10/11/17 13:37:49] Send/sec : 3579 Bytes
+[10/11/17 13:37:49] RTT : Avr 15ms / max 41ms / CheckCount 41
+[10/11/17 13:37:50] Loop/sec : 237
+[10/11/17 13:37:50] Packet/sec : 147110
+[10/11/17 13:37:50] Recv/sec : 1910138 Bytes
+[10/11/17 13:37:50] Send/sec : 3342 Bytes
+[10/11/17 13:37:50] RTT : Avr 25ms / max 74ms / CheckCount 29
+[10/11/17 13:37:51] Loop/sec : 152
+[10/11/17 13:37:51] Packet/sec : 205513
+[10/11/17 13:37:51] Recv/sec : 2652133 Bytes
+[10/11/17 13:37:51] Send/sec : 4237 Bytes
+[10/11/17 13:37:51] RTT : Avr 20ms / max 134ms / CheckCount 32
+[10/11/17 13:37:52] Loop/sec : 242
+[10/11/17 13:37:52] Packet/sec : 252882
+[10/11/17 13:37:52] Recv/sec : 3303561 Bytes
+[10/11/17 13:37:52] Send/sec : 6548 Bytes
+[10/11/17 13:37:52] RTT : Avr 20ms / max 34ms / CheckCount 32
+[10/11/17 13:37:53] Loop/sec : 246
+[10/11/17 13:37:53] Packet/sec : 201686
+[10/11/17 13:37:53] Recv/sec : 2584804 Bytes
+[10/11/17 13:37:53] Send/sec : 4261 Bytes
+[10/11/17 13:37:53] RTT : Avr 15ms / max 43ms / CheckCount 39
+[10/11/17 13:37:54] Loop/sec : 253
+[10/11/17 13:37:54] Packet/sec : 194772
+[10/11/17 13:37:54] Recv/sec : 2498162 Bytes
+[10/11/17 13:37:54] Send/sec : 4360 Bytes
+[10/11/17 13:37:54] RTT : Avr 15ms / max 34ms / CheckCount 40
+[10/11/17 13:37:55] Loop/sec : 247
+[10/11/17 13:37:55] Packet/sec : 204679
+[10/11/17 13:37:55] Recv/sec : 2639341 Bytes
+[10/11/17 13:37:55] Send/sec : 5287 Bytes
+[10/11/17 13:37:55] RTT : Avr 15ms / max 28ms / CheckCount 43
+[10/11/17 13:37:56] Loop/sec : 175
+[10/11/17 13:37:56] Packet/sec : 211077
+[10/11/17 13:37:56] Recv/sec : 2745498 Bytes
+[10/11/17 13:37:56] Send/sec : 6356 Bytes
+[10/11/17 13:37:56] RTT : Avr 31ms / max 63ms / CheckCount 24
+[10/11/17 13:37:57] Loop/sec : 204
+[10/11/17 13:37:57] Packet/sec : 177933
+[10/11/17 13:37:57] Recv/sec : 2291483 Bytes
+[10/11/17 13:37:57] Send/sec : 4819 Bytes
+[10/11/17 13:37:57] RTT : Avr 13ms / max 32ms / CheckCount 42
+[10/11/17 13:37:58] Loop/sec : 267
+[10/11/17 13:37:58] Packet/sec : 165242
+[10/11/17 13:37:58] Recv/sec : 2132000 Bytes
+[10/11/17 13:37:58] Send/sec : 4550 Bytes
+[10/11/17 13:37:58] RTT : Avr 13ms / max 47ms / CheckCount 39
+[10/11/17 13:37:59] Loop/sec : 251
+[10/11/17 13:37:59] Packet/sec : 173190
+[10/11/17 13:37:59] Recv/sec : 2255789 Bytes
+[10/11/17 13:37:59] Send/sec : 5782 Bytes
+[10/11/17 13:37:59] RTT : Avr 15ms / max 61ms / CheckCount 39
+[10/11/17 13:38:00] Loop/sec : 238
+[10/11/17 13:38:00] Packet/sec : 170646
+[10/11/17 13:38:00] Recv/sec : 2220989 Bytes
+[10/11/17 13:38:00] Send/sec : 5935 Bytes
+[10/11/17 13:38:00] RTT : Avr 12ms / max 41ms / CheckCount 44
+[10/11/17 13:38:01] Loop/sec : 232
+[10/11/17 13:38:01] Packet/sec : 147522
+[10/11/17 13:38:01] Recv/sec : 1915050 Bytes
+[10/11/17 13:38:01] Send/sec : 4934 Bytes
+[10/11/17 13:38:01] RTT : Avr 16ms / max 45ms / CheckCount 36
+[10/11/17 13:38:02] Loop/sec : 119
+[10/11/17 13:38:02] Packet/sec : 152756
+[10/11/17 13:38:02] Recv/sec : 1970947 Bytes
+[10/11/17 13:38:02] Send/sec : 4942 Bytes
+[10/11/17 13:38:02] RTT : Avr 23ms / max 147ms / CheckCount 28
+[10/11/17 13:38:03] Loop/sec : 216
+[10/11/17 13:38:03] Packet/sec : 150001
+[10/11/17 13:38:03] Recv/sec : 1958621 Bytes
+[10/11/17 13:38:03] Send/sec : 5450 Bytes
+[10/11/17 13:38:03] RTT : Avr 15ms / max 130ms / CheckCount 40
+[10/11/17 13:38:04] Loop/sec : 271
+[10/11/17 13:38:04] Packet/sec : 139126
+[10/11/17 13:38:04] Recv/sec : 1800823 Bytes
+[10/11/17 13:38:04] Send/sec : 5296 Bytes
+[10/11/17 13:38:04] RTT : Avr 11ms / max 40ms / CheckCount 44
+[10/11/17 13:38:05] Loop/sec : 247
+[10/11/17 13:38:05] Packet/sec : 141309
+[10/11/17 13:38:05] Recv/sec : 1839859 Bytes
+[10/11/17 13:38:05] Send/sec : 5490 Bytes
+[10/11/17 13:38:05] RTT : Avr 14ms / max 58ms / CheckCount 41
+[10/11/17 13:38:06] Loop/sec : 260
+[10/11/17 13:38:06] Packet/sec : 131087
+[10/11/17 13:38:06] Recv/sec : 1693977 Bytes
+[10/11/17 13:38:06] Send/sec : 4944 Bytes
+[10/11/17 13:38:06] RTT : Avr 12ms / max 32ms / CheckCount 45
+[10/11/17 13:38:07] Loop/sec : 253
+[10/11/17 13:38:07] Packet/sec : 131131
+[10/11/17 13:38:07] Recv/sec : 1703661 Bytes
+[10/11/17 13:38:07] Send/sec : 5544 Bytes
+[10/11/17 13:38:08] RTT : Avr 18ms / max 45ms / CheckCount 37
+[10/11/17 13:38:08] Loop/sec : 153
+[10/11/17 13:38:08] Packet/sec : 124138
+[10/11/17 13:38:08] Recv/sec : 1612965 Bytes
+[10/11/17 13:38:08] Send/sec : 5317 Bytes
+[10/11/17 13:38:08] RTT : Avr 19ms / max 156ms / CheckCount 33
+[10/11/17 13:38:09] Loop/sec : 258
+[10/11/17 13:38:09] Packet/sec : 118254
+[10/11/17 13:38:09] Recv/sec : 1527824 Bytes
+[10/11/17 13:38:09] Send/sec : 5362 Bytes
+[10/11/17 13:38:09] RTT : Avr 14ms / max 74ms / CheckCount 37
+[10/11/17 13:38:10] Loop/sec : 195
+[10/11/17 13:38:10] Packet/sec : 115746
+[10/11/17 13:38:10] Recv/sec : 1503554 Bytes
+[10/11/17 13:38:10] Send/sec : 5112 Bytes
+[10/11/17 13:38:10] RTT : Avr 14ms / max 61ms / CheckCount 39
+[10/11/17 13:38:11] Loop/sec : 247
+[10/11/17 13:38:11] Packet/sec : 106968
+[10/11/17 13:38:11] Recv/sec : 1395255 Bytes
+[10/11/17 13:38:11] Send/sec : 5626 Bytes
+[10/11/17 13:38:11] RTT : Avr 10ms / max 33ms / CheckCount 43
+[10/11/17 13:38:12] Loop/sec : 283
+[10/11/17 13:38:12] Packet/sec : 104755
+[10/11/17 13:38:13] Recv/sec : 1357632 Bytes
+[10/11/17 13:38:13] Send/sec : 5156 Bytes
+[10/11/17 13:38:13] RTT : Avr 9ms / max 28ms / CheckCount 44
+[10/11/17 13:38:13] Loop/sec : 133
+[10/11/17 13:38:13] Packet/sec : 101768
+[10/11/17 13:38:13] Recv/sec : 1322325 Bytes
+[10/11/17 13:38:13] Send/sec : 5112 Bytes
+[10/11/17 13:38:13] RTT : Avr 43ms / max 320ms / CheckCount 19
+[10/11/17 13:38:14] Loop/sec : 163
+[10/11/17 13:38:14] Packet/sec : 96048
+[10/11/17 13:38:14] Recv/sec : 1249687 Bytes
+[10/11/17 13:38:14] Send/sec : 5242 Bytes
+[10/11/17 13:38:14] RTT : Avr 14ms / max 112ms / CheckCount 37
+[10/11/17 13:38:15] Loop/sec : 266
+[10/11/17 13:38:15] Packet/sec : 98615
+[10/11/17 13:38:15] Recv/sec : 1283864 Bytes
+[10/11/17 13:38:15] Send/sec : 5477 Bytes
+[10/11/17 13:38:15] RTT : Avr 10ms / max 22ms / CheckCount 44
+[10/11/17 13:38:22] Loop/sec : 269
+[10/11/17 13:38:22] Packet/sec : 98294
+[10/11/17 13:38:22] Recv/sec : 1275967 Bytes
+[10/11/17 13:38:22] Send/sec : 5473 Bytes
+[10/11/17 13:38:22] RTT : Avr 10ms / max 30ms / CheckCount 46
+[10/11/17 13:38:22] Loop/sec : 124
+[10/11/17 13:38:22] Packet/sec : 248219
+[10/11/17 13:38:22] Recv/sec : 3062936 Bytes
+[10/11/17 13:38:22] Send/sec : 0 Bytes
+[10/11/17 13:38:22] RTT : Avr 5393ms / max 5393ms / CheckCount 1
+[10/11/17 13:38:23] Loop/sec : 198
+[10/11/17 13:38:23] Packet/sec : 110852
+[10/11/17 13:38:23] Recv/sec : 1458027 Bytes
+[10/11/17 13:38:23] Send/sec : 11709 Bytes
+[10/11/17 13:38:23] RTT : Avr 15ms / max 84ms / CheckCount 41
+[10/11/17 13:38:24] Loop/sec : 241
+[10/11/17 13:38:24] Packet/sec : 82681
+[10/11/17 13:38:24] Recv/sec : 1093585 Bytes
+[10/11/17 13:38:24] Send/sec : 8709 Bytes
+[10/11/17 13:38:24] RTT : Avr 11ms / max 61ms / CheckCount 41
+[10/11/17 13:38:25] Loop/sec : 155
+[10/11/17 13:38:25] Packet/sec : 47237
+[10/11/17 13:38:25] Recv/sec : 593163 Bytes
+[10/11/17 13:38:25] Send/sec : 315 Bytes
+[10/11/17 13:38:25] RTT : Avr 14ms / max 33ms / CheckCount 35
+[10/11/17 13:38:26] Loop/sec : 295
+[10/11/17 13:38:26] Packet/sec : 61503
+[10/11/17 13:38:26] Recv/sec : 790844 Bytes
+[10/11/17 13:38:26] Send/sec : 3683 Bytes
+[10/11/17 13:38:26] RTT : Avr 9ms / max 25ms / CheckCount 47
+[10/11/17 13:38:27] Loop/sec : 254
+[10/11/17 13:38:27] Packet/sec : 78029
+[10/11/17 13:38:27] Recv/sec : 1029008 Bytes
+[10/11/17 13:38:27] Send/sec : 9146 Bytes
+[10/11/17 13:38:27] RTT : Avr 11ms / max 42ms / CheckCount 43
+[10/11/17 13:38:28] Loop/sec : 205
+[10/11/17 13:38:28] Packet/sec : 72394
+[10/11/17 13:38:28] Recv/sec : 954850 Bytes
+[10/11/17 13:38:28] Send/sec : 6915 Bytes
+[10/11/17 13:38:28] RTT : Avr 13ms / max 81ms / CheckCount 36
+[10/11/17 13:38:29] Loop/sec : 253
+[10/11/17 13:38:29] Packet/sec : 46320
+[10/11/17 13:38:29] Recv/sec : 588886 Bytes
+[10/11/17 13:38:29] Send/sec : 2031 Bytes
+[10/11/17 13:38:29] RTT : Avr 12ms / max 74ms / CheckCount 38
+[10/11/17 13:38:30] Loop/sec : 196
+[10/11/17 13:38:30] Packet/sec : 59089
+[10/11/17 13:38:30] Recv/sec : 765807 Bytes
+[10/11/17 13:38:30] Send/sec : 4417 Bytes
+[10/11/17 13:38:30] RTT : Avr 19ms / max 72ms / CheckCount 33
+[10/11/17 13:38:31] Loop/sec : 143
+[10/11/17 13:38:31] Packet/sec : 69437
+[10/11/17 13:38:31] Recv/sec : 914296 Bytes
+[10/11/17 13:38:31] Send/sec : 7497 Bytes
+[10/11/17 13:38:31] RTT : Avr 18ms / max 175ms / CheckCount 34
+[10/11/17 13:38:32] Loop/sec : 223
+[10/11/17 13:38:32] Packet/sec : 64946
+[10/11/17 13:38:32] Recv/sec : 850187 Bytes
+[10/11/17 13:38:32] Send/sec : 6385 Bytes
+[10/11/17 13:38:32] RTT : Avr 9ms / max 57ms / CheckCount 35
+[10/11/17 13:38:33] Loop/sec : 324
+[10/11/17 13:38:33] Packet/sec : 53919
+[10/11/17 13:38:33] Recv/sec : 695078 Bytes
+[10/11/17 13:38:33] Send/sec : 3504 Bytes
+[10/11/17 13:38:33] RTT : Avr 7ms / max 16ms / CheckCount 46

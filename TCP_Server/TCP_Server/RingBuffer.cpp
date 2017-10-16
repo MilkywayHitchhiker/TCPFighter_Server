@@ -34,6 +34,7 @@ CRingbuffer::CRingbuffer (int iBufferSize)
 CRingbuffer::~CRingbuffer (void)
 {
 	delete[]pBuffer;
+	DeleteCriticalSection (&cs);
 	return;
 }
 

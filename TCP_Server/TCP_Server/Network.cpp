@@ -774,6 +774,7 @@ BOOL	PacketProc_Attack1 (st_SESSION *pSession, Packet *pack)
 
 	st_CHARACTER *pCharDamege = AttackCheck (dfACTION_ATTACK1, pSession->dwSessionID);
 	//데미지 입는 사람 패킷 만들어서 전송.
+	/*
 	if ( pCharDamege == NULL )
 	{
 		return true;
@@ -784,7 +785,7 @@ BOOL	PacketProc_Attack1 (st_SESSION *pSession, Packet *pack)
 	Pack_Damage (&Damege, pAttacker->dwSessionID, pCharDamege->dwSessionID, pCharDamege->chHP);
 
 	SendPacket_Around (pCharDamege->pSession, &Damege, true);
-
+   */
 	return true;
 }
 
